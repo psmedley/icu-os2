@@ -116,6 +116,12 @@ FINAL_IMPORT_LIB = $(IMPORT_LIB)#M#
 %.$(SO): %$(SO_TARGET_VERSION_MAJOR).$(SO)
 	@:
 
+# No versioned libraries on OS/2
+DISABLE_VERSIONED_LIBS = 1
+
+## OS/2 needs a separate rule for the import library
+EXTRA_TARGETS = $(FINAL_IMPORT_LIB)
+
 %$(IMPORT_LIB_EXT): %.$(SO)
 	emximp -o $@ $<
 
