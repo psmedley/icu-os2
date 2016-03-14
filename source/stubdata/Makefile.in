@@ -33,7 +33,7 @@ endif
 
 ifneq ($(ENABLE_SHARED),)
 SO_TARGET = $(STUBDATA_LIBDIR)$(LIBICU)$(TARGET_STUBNAME)$(ICULIBSUFFIX)$(STUB_SUFFIX).$(SO)
-ALL_SO_TARGETS = $(FINAL_SO_TARGET) $(MIDDLE_SO_TARGET) $(SO_TARGET) $(BATCH_STUB_TARGET) $(SHARED_OBJECT)
+ALL_SO_TARGETS = $(FINAL_SO_TARGET) $(MIDDLE_SO_TARGET) $(SO_TARGET) $(BATCH_STUB_TARGET) $(SHARED_OBJECT) $(EXTRA_TARGETS)
 endif
 
 
@@ -86,19 +86,23 @@ ifneq ($(ENABLE_STATIC),)
 endif
 ifneq ($(ENABLE_SHARED),)
 	$(INSTALL-L) $(FINAL_SO_TARGET) $(DESTDIR)$(libdir)
+ifeq ($(DISABLE_VERSIONED_LIBS),)
 ifneq ($(FINAL_SO_TARGET),$(SO_TARGET))
 	cd $(DESTDIR)$(libdir) && $(RM) $(notdir $(SO_TARGET)) && ln -s $(notdir $(FINAL_SO_TARGET)) $(notdir $(SO_TARGET))
 ifneq ($(FINAL_SO_TARGET),$(MIDDLE_SO_TARGET))
 	cd $(DESTDIR)$(libdir) && $(RM) $(notdir $(MIDDLE_SO_TARGET)) && ln -s $(notdir $(FINAL_SO_TARGET)) $(notdir $(MIDDLE_SO_TARGET))
 endif
 endif
+endif
 ifneq ($(IMPORT_LIB_EXT),)
 	$(INSTALL-L) $(FINAL_IMPORT_LIB) $(DESTDIR)$(libdir)
+ifeq ($(DISABLE_VERSIONED_LIBS),)
 ifneq ($(IMPORT_LIB),$(FINAL_IMPORT_LIB))
 	cd $(DESTDIR)$(libdir) && $(RM) $(notdir $(IMPORT_LIB)) && ln -s $(notdir $(FINAL_IMPORT_LIB)) $(notdir $(IMPORT_LIB))
 endif
 ifneq ($(MIDDLE_IMPORT_LIB),$(FINAL_IMPORT_LIB))
 	cd $(DESTDIR)$(libdir) && $(RM) $(notdir $(MIDDLE_IMPORT_LIB)) && ln -s $(notdir $(FINAL_IMPORT_LIB)) $(notdir $(MIDDLE_IMPORT_LIB))
+endif
 endif
 endif
 endif
