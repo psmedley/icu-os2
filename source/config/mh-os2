@@ -143,6 +143,10 @@ BIR_CPPFLAGS= -DU_HAVE_BIND_INTERNAL_REFERENCES
 # Dependencies [i.e. map files] for the final library
 BIR_DEPS=
 
+# Environment variable to set a runtime search path
+LDLIBRARYPATH_ENVVAR = BEGINLIBPATH
+PATH_SEP = \;
+
 # The type of assembly to write for generating an object file
 GENCCODE_ASSEMBLY=-a gcc-os2
 

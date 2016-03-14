@@ -208,12 +208,12 @@ do
                 fi
             fi
 
-	    echo "env ${QUOT}${LDLIBRARYPATH_ENVVAR}=${libdir}:"'${'"${LDLIBRARYPATH_ENVVAR}"'}'${QUOT} ${CMD}
+	    echo "env ${QUOT}${LDLIBRARYPATH_ENVVAR}=${libdir}${PATH_SEP}"'${'"${LDLIBRARYPATH_ENVVAR}"'}'${QUOT} ${CMD}
 	    ;;
 
 	--invoke)
 	    QUOT="\""
-	    echo "env ${QUOT}${LDLIBRARYPATH_ENVVAR}=${libdir}:"'${'"${LDLIBRARYPATH_ENVVAR}"'}'${QUOT}
+	    echo "env ${QUOT}${LDLIBRARYPATH_ENVVAR}=${libdir}${PATH_SEP}"'${'"${LDLIBRARYPATH_ENVVAR}"'}'${QUOT}
 	    ;;
 
 	--cflags)

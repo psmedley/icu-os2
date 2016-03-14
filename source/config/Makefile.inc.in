@@ -140,6 +140,7 @@ ECHO_T=@ICU_ECHO_T@
 # Environment variable to set a runtime search path
 #   (Overridden when necessary in -mh files)
 LDLIBRARYPATH_ENVVAR = LD_LIBRARY_PATH
+PATH_SEP = :
 
 # Versioned target for a shared library
 FINAL_SO_TARGET = $(SO_TARGET).$(SO_TARGET_VERSION)
