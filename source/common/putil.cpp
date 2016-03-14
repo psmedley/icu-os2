@@ -1176,7 +1176,7 @@ u_setDataDirectory(const char *directory) {
 #if (U_FILE_SEP_CHAR != U_FILE_ALT_SEP_CHAR)
         {
             char *p;
-            while(p = uprv_strchr(newDataDir, U_FILE_ALT_SEP_CHAR)) {
+            while((p = uprv_strchr(newDataDir, U_FILE_ALT_SEP_CHAR))) {
                 *p = U_FILE_SEP_CHAR;
             }
         }
@@ -1306,7 +1306,7 @@ static void setTimeZoneFilesDir(const char *path, UErrorCode &status) {
     gTimeZoneFilesDirectory->append(path, status);
 #if (U_FILE_SEP_CHAR != U_FILE_ALT_SEP_CHAR)
     char *p = gTimeZoneFilesDirectory->data();
-    while (p = uprv_strchr(p, U_FILE_ALT_SEP_CHAR)) {
+    while ((p = uprv_strchr(p, U_FILE_ALT_SEP_CHAR))) {
         *p = U_FILE_SEP_CHAR;
     }
 #endif
