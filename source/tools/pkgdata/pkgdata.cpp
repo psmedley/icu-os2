@@ -85,9 +85,11 @@ static void pkg_createOptMatchArch(char *optMatchArch);
 static void pkg_destroyOptMatchArch(char *optMatchArch);
 #endif
 
-static int32_t pkg_createWithAssemblyCode(const char *targetDir, const char mode, const char *gencFilePath);
-static int32_t pkg_generateLibraryFile(const char *targetDir, const char mode, const char *objectFile, char *command = NULL, UBool specialHandling=FALSE);
+static int32_t pkg_createWithAssemblyCode(UPKGOptions *o, const char *targetDir, const char mode, const char *gencFilePath);
+static int32_t pkg_generateLibraryFile(UPKGOptions *o, const char *targetDir, const char mode, const char *objectFile, char *command = NULL, UBool specialHandling=FALSE);
+#if !U_PLATFORM_USES_ONLY_WIN32_API && U_PLATFORM != U_PF_OS2
 static int32_t pkg_archiveLibrary(const char *targetDir, const char *version, UBool reverseExt);
+#endif
 static void createFileNames(UPKGOptions *o, const char mode, const char *version_major, const char *version, const char *libName, const UBool reverseExt, UBool noVersion);
 static int32_t initializePkgDataFlags(UPKGOptions *o);
 
@@ -653,12 +655,16 @@ static int32_t pkg_executeOptions(UPKGOptions *o) {
                 }
             } else {
                 noVersion = TRUE;
+#if U_PLATFORM != U_PF_OS2
                 if (IN_DLL_MODE(mode)) {
                     fprintf(stdout, "Warning: Providing a revision number with the -r option is recommended when packaging data in the current mode.\n");
                 }
+#endif
             }
 
-#if U_PLATFORM != U_PF_OS400
+#if U_PLATFORM == U_PF_OS2
+            reverseExt = TRUE;
+#elif U_PLATFORM != U_PF_OS400
             /* Certain platforms have different library extension ordering. (e.g. libicudata.##.so vs libicudata.so.##)
              * reverseExt is FALSE if the suffix should be the version number.
              */
@@ -712,7 +718,7 @@ static int32_t pkg_executeOptions(UPKGOptions *o) {
                     checkAssemblyHeaderName(genccodeAssembly+3)) {
                     writeAssemblyCode(datFileNamePath, o->tmpDir, o->entryName, NULL, gencFilePath);
 
-                    result = pkg_createWithAssemblyCode(targetDir, mode, gencFilePath);
+                    result = pkg_createWithAssemblyCode(o, targetDir, mode, gencFilePath);
                     if (result != 0) {
                         fprintf(stderr, "Error generating assembly code for data.\n");
                         return result;
@@ -748,7 +754,7 @@ static int32_t pkg_executeOptions(UPKGOptions *o) {
                     writeObjectCode(datFileNamePath, o->tmpDir, o->entryName, (optMatchArch[0] == 0 ? NULL : optMatchArch), NULL, gencFilePath);
                     pkg_destroyOptMatchArch(optMatchArch);
 #if U_PLATFORM_IS_LINUX_BASED
-                    result = pkg_generateLibraryFile(targetDir, mode, gencFilePath);
+                    result = pkg_generateLibraryFile(o, targetDir, mode, gencFilePath);
 #elif defined(WINDOWS_WITH_MSVC)
                     result = pkg_createWindowsDLL(mode, gencFilePath, o);
 #endif
@@ -765,7 +771,7 @@ static int32_t pkg_executeOptions(UPKGOptions *o) {
                     return result;
                 }
             }
-#if !U_PLATFORM_USES_ONLY_WIN32_API
+#if !U_PLATFORM_USES_ONLY_WIN32_API && U_PLATFORM != U_PF_OS2
             if(!IN_STATIC_MODE(mode)) {
                 /* Certain platforms uses archive library. (e.g. AIX) */
                 if(o->verbose) {
@@ -1257,6 +1263,7 @@ static int32_t pkg_installFileMode(const char *installDir, const char *srcDir, c
     return result;
 }
 
+#if !U_PLATFORM_USES_ONLY_WIN32_API && U_PLATFORM != U_PF_OS2
 /* Archiving of the library file may be needed depending on the platform and options given.
  * If archiving is not needed, copy over the library file name.
  */
@@ -1317,12 +1324,13 @@ static int32_t pkg_archiveLibrary(const char *targetDir, const char *version, UB
 
     return result;
 }
+#endif
 
 /*
  * Using the compiler information from the configuration file set by -O option, generate the library file.
  * command may be given to allow for a larger buffer for cmd.
  */
-static int32_t pkg_generateLibraryFile(const char *targetDir, const char mode, const char *objectFile, char *command, UBool specialHandling) {
+static int32_t pkg_generateLibraryFile(UPKGOptions *o, const char *targetDir, const char mode, const char *objectFile, char *command, UBool specialHandling) {
     int32_t result = 0;
     char *cmd = NULL;
     UBool freeCmd = FALSE;
@@ -1376,6 +1384,10 @@ static int32_t pkg_generateLibraryFile(const char *targetDir, const char mode, c
             length += uprv_strlen(targetDir) + uprv_strlen(libFileNames[LIB_FILE_CYGWIN_VERSION]);
 #elif U_PLATFORM == U_PF_MINGW
             length += uprv_strlen(targetDir) + uprv_strlen(libFileNames[LIB_FILE_MINGW]);
+#elif U_PLATFORM == U_PF_OS2
+            length += 256 + uprv_strlen(targetDir) * 5 + uprv_strlen(libFileNames[LIB_FILE]) * 6 +
+                      uprv_strlen(o->version == NULL ? "" : o->version) +
+                      uprv_strlen(o->entryName) + uprv_strlen(UDATA_CMN_INTERMEDIATE_SUFFIX);
 #endif
             if ((cmd = (char *)uprv_malloc(sizeof(char) * length)) == NULL) {
                 fprintf(stderr, "Unable to allocate memory for command.\n");
@@ -1408,6 +1420,28 @@ static int32_t pkg_generateLibraryFile(const char *targetDir, const char mode, c
                 pkgDataFlags[LDICUDTFLAGS],
                 targetDir,
                 libFileNames[LIB_FILE_VERSION_TMP],
+#elif U_PLATFORM == U_PF_OS2
+        sprintf(cmd, "(echo 'LIBRARY %s%s' && "
+                     "echo 'DATA READONLY SINGLE SHARED' && "
+                     "echo 'EXPORTS _%s%s') > %s%s.def && "
+                     "(echo '.globl WEAK$ZERO' && echo 'WEAK$ZERO = 0') > %s%s.S && "
+                     "%s -nostdlib %s -o %s%s %s%s.def %s%s.S %s %s%s %s %s"
+                     " && rm -f %s%s.def %s%s.S",
+                libFileNames[LIB_FILE],
+                o->version == NULL ? "" : o->version,
+                o->entryName, UDATA_CMN_INTERMEDIATE_SUFFIX,
+                targetDir,
+                libFileNames[LIB_FILE],
+                targetDir,
+                libFileNames[LIB_FILE],
+                pkgDataFlags[GENLIB],
+                pkgDataFlags[LDICUDTFLAGS],
+                targetDir,
+                libFileNames[LIB_FILE_VERSION_TMP],
+                targetDir,
+                libFileNames[LIB_FILE],
+                targetDir,
+                libFileNames[LIB_FILE],
 #else
         sprintf(cmd, "%s %s -o %s%s %s %s%s %s %s",
                 pkgDataFlags[GENLIB],
@@ -1419,7 +1453,15 @@ static int32_t pkg_generateLibraryFile(const char *targetDir, const char mode, c
                 pkgDataFlags[LD_SONAME],
                 pkgDataFlags[LD_SONAME][0] == 0 ? "" : libFileNames[LIB_FILE_VERSION_MAJOR],
                 pkgDataFlags[RPATH_FLAGS],
-                pkgDataFlags[BIR_FLAGS]);
+                pkgDataFlags[BIR_FLAGS]
+#if U_PLATFORM == U_PF_OS2
+                ,
+                targetDir,
+                libFileNames[LIB_FILE],
+                targetDir,
+                libFileNames[LIB_FILE]
+#endif
+               );
 
         /* Generate the library file. */
         result = runCommand(cmd);
@@ -1496,7 +1538,7 @@ static int32_t pkg_generateLibraryFile(const char *targetDir, const char mode, c
     return result;
 }
 
-static int32_t pkg_createWithAssemblyCode(const char *targetDir, const char mode, const char *gencFilePath) {
+static int32_t pkg_createWithAssemblyCode(UPKGOptions *o, const char *targetDir, const char mode, const char *gencFilePath) {
     char tempObjectFile[SMALL_BUFFER_MAX_SIZE] = "";
     char *cmd;
     int32_t result = 0;
@@ -1529,7 +1571,7 @@ static int32_t pkg_createWithAssemblyCode(const char *targetDir, const char mode
         return result;
     }
 
-    return pkg_generateLibraryFile(targetDir, mode, tempObjectFile);
+    return pkg_generateLibraryFile(o, targetDir, mode, tempObjectFile);
 }
 
 #ifdef BUILD_DATA_WITHOUT_ASSEMBLY
@@ -1734,9 +1776,9 @@ static int32_t pkg_createWithoutAssemblyCode(UPKGOptions *o, const char *targetD
     if (result == 0) {
         /* Generate the library file. */
 #if U_PLATFORM == U_PF_OS390
-        result = pkg_generateLibraryFile(targetDir, mode, buffer, cmd, (o->pdsbuild && IN_DLL_MODE(mode)));
+        result = pkg_generateLibraryFile(o, targetDir, mode, buffer, cmd, (o->pdsbuild && IN_DLL_MODE(mode)));
 #else
-        result = pkg_generateLibraryFile(targetDir,mode, buffer, cmd);
+        result = pkg_generateLibraryFile(o, targetDir,mode, buffer, cmd);
 #endif
     }
 

@@ -1,0 +1,164 @@
+## -*-makefile-*-
+## OS2-specific setup
+## Copyright (c) 1999-2016, International Business Machines Corporation and
+## others. All Rights Reserved.
+
+## Commands to generate dependency files
+GEN_DEPS.c=  $(CC) -E -MM $(DEFS) $(CPPFLAGS)
+GEN_DEPS.cc= $(CXX) -E -MM $(DEFS) $(CPPFLAGS) $(CXXFLAGS)
+
+## Flags for position independent code
+SHAREDLIBCFLAGS =
+SHAREDLIBCXXFLAGS =
+SHAREDLIBCPPFLAGS = -DPIC
+
+## Additional flags when building libraries and with threads
+THREADSCPPFLAGS = -D_REENTRANT
+LIBCPPFLAGS =
+
+## Compiler switch to embed a runtime search path
+LD_RPATH=
+LD_RPATH_PRE = -Wl,-rpath,
+
+## Compiler switch to embed a library name
+LD_SONAME =
+
+## Shared object suffix
+SO = dll
+## Non-shared intermediate object suffix
+STATIC_O = ao
+
+ifeq ($(ENABLE_SHARED),YES)
+## Don't use major number when --disable-renaming is given#M#
+## (this builds DLLs used for system-wide installations).#M#
+ifeq ($(filter -DU_DISABLE_RENAMING=1,$(CPPFLAGS)),)#M#
+SO_TARGET_VERSION_SUFFIX = $(SO_TARGET_VERSION_MAJOR)#M#
+PKGDATA_VERSIONING = -r $(SO_TARGET_VERSION_MAJOR)#M#
+# The following is for Makefile.inc's use.#M#
+ICULIBSUFFIX_VERSION = $(SO_TARGET_VERSION_MAJOR)#M#
+else#M#
+SO_TARGET_VERSION_SUFFIX =#M#
+PKGDATA_VERSIONING = -q # dummy option to make it non-empty#M#
+ICULIBSUFFIX_VERSION =#M#
+endif#M#
+else#M#
+SO_TARGET_VERSION_SUFFIX =#M#
+endif#M#
+
+# The following is for icu-config.
+#SH#if [ "${CPPFLAGS%%*-DU_DISABLE_RENAMING=1*}" = "$CPPFLAGS" ] ; then
+#SH#ICULIBSUFFIX_VERSION=$(LIB_VERSION_MAJOR)
+#SH#else
+#SH#ICULIBSUFFIX_VERSION=
+#SH#fi
+
+# Static library prefix and file extension
+LIBSICU = $(ICUPREFIX)$(STATIC_PREFIX)
+A = a
+
+## An import library is needed for OS/2
+IMPORT_LIB_EXT = _dll.a
+
+LIBPREFIX=
+
+# Change the stubnames to match the 8x3 limit.
+# This is also for backwards compatibility.
+DATA_STUBNAME = dt
+I18N_STUBNAME = in
+CTESTFW_STUBNAME = tst
+
+LIBICU = $(ICUPREFIX)$(STATIC_PREFIX_WHEN_USED)
+
+DEFAULT_LIBS = -lpthread
+
+# Commands to link
+LINK.c=       $(CC) $(CFLAGS) $(LDFLAGS) -Zomf -Zlinker DISABLE\ 1121
+LINK.cc=      $(CXX) $(CXXFLAGS) $(LDFLAGS) -Zomf -Zlinker DISABLE\ 1121
+
+SHLIB.c= $(CXX) $(CXXFLAGS) $(LDFLAGS) -Zomf -Zdll -Zlinker DISABLE\ 1121
+
+SHLIB.cc= $(CXX) $(CXXFLAGS) $(LDFLAGS) -Zomf -Zdll -Zlinker DISABLE\ 1121
+
+## Compilation rules
+%.$(STATIC_O): $(srcdir)/%.c
+	$(call SILENT_COMPILE,$(strip $(COMPILE.c) $(STATICCPPFLAGS) $(STATICCFLAGS)) -o $@ $<)
+%.o: $(srcdir)/%.c
+	$(call SILENT_COMPILE,$(strip $(COMPILE.c) $(DYNAMICCPPFLAGS) $(DYNAMICCFLAGS)) -o $@ $<)
+
+%.$(STATIC_O): $(srcdir)/%.cpp
+	$(call SILENT_COMPILE,$(strip $(COMPILE.cc) $(STATICCPPFLAGS) $(STATICCXXFLAGS)) -o $@ $<)
+%.o: $(srcdir)/%.cpp
+	$(call SILENT_COMPILE,$(strip $(COMPILE.cc) $(DYNAMICCPPFLAGS) $(DYNAMICCXXFLAGS)) -o $@ $<)
+
+## Dependency rules
+%.d: $(srcdir)/%.c
+	$(call ICU_MSG,(deps)) $<
+	@$(SHELL) -ec '$(GEN_DEPS.c) $< \
+		| sed '\''s%\($*\)\.o[ :]*%\1.o $@ : %g'\'' > $@; \
+		[ -s $@ ] || rm -f $@'
+
+%.d: $(srcdir)/%.cpp
+	$(call ICU_MSG,(deps)) $<
+	@$(SHELL) -ec '$(GEN_DEPS.cc) $< \
+		| sed '\''s%\($*\)\.o[ :]*%\1.o $@ : %g'\'' > $@; \
+		[ -s $@ ] || rm -f $@'
+
+## Versioned target for a shared library.
+FINAL_SO_TARGET = $(SO_TARGET:.$(SO)=$(SO_TARGET_VERSION_SUFFIX).$(SO))
+MIDDLE_SO_TARGET = $(FINAL_SO_TARGET)
+
+## Versioned import library names.
+IMPORT_LIB = $(SO_TARGET:.$(SO)=$(SO_TARGET_VERSION_SUFFIX)$(IMPORT_LIB_EXT))#M#
+MIDDLE_IMPORT_LIB = $(IMPORT_LIB)#M#
+FINAL_IMPORT_LIB = $(IMPORT_LIB)#M#
+
+## Versioned libraries rules
+%.$(SO): %$(SO_TARGET_VERSION_MAJOR).$(SO)
+	@:
+
+%$(IMPORT_LIB_EXT): %.$(SO)
+	emximp -o $@ $<
+
+## OS/2 needs a .def file to specify DLL options
+SO_VERSION_DATA = $(if $(SHARED_OBJECT),$(notdir $(basename $(SHARED_OBJECT))).def)#M#
+
+%.def: $(MAKEFILE_LIST)
+	echo "LIBRARY $(notdir $(basename $@)) INITINSTANCE TERMINSTANCE" > $@
+	echo "DATA MULTIPLE NONSHARED" >> $@
+
+##  Bind internal references
+
+# LDflags that pkgdata will use
+BIR_LDFLAGS=
+
+# CPPflags for genccode/gencmn
+BIR_CPPFLAGS= -DU_HAVE_BIND_INTERNAL_REFERENCES
+
+# Dependencies [i.e. map files] for the final library
+BIR_DEPS=
+
+# The type of assembly to write for generating an object file
+GENCCODE_ASSEMBLY=-a gcc-os2
+
+## Remove shared library 's'
+STATIC_PREFIX_WHEN_USED =
+STATIC_PREFIX =
+
+# for icu-config
+
+#SH### copied from Makefile.inc
+#SH#ICULIBS_COMMON_LIB_NAME="${LIBICU}${COMMON_STUBNAME}${ICULIBSUFFIX}${ICULIBSUFFIX_VERSION}.${SO}"
+#SH#ICULIBS_COMMON_LIB_NAME_A="${LIBICU}${COMMON_STUBNAME}${ICULIBSUFFIX}${ICULIBSUFFIX_VERSION}${IMPORT_LIB_EXT}"
+#SH#ICULIBS_COMMON="-l${LIBICU}${COMMON_STUBNAME}${ICULIBSUFFIX}${ICULIBSUFFIX_VERSION}"
+#SH#ICULIBS_DATA="-l${LIBICU}${DATA_STUBNAME}${ICULIBSUFFIX}${ICULIBSUFFIX_VERSION}"
+#SH#ICULIBS_I18N="-l${LIBICU}${I18N_STUBNAME}${ICULIBSUFFIX}${ICULIBSUFFIX_VERSION}"
+#SH#ICULIBS_TOOLUTIL="-l${LIBICU}${TOOLUTIL_STUBNAME}${ICULIBSUFFIX}${ICULIBSUFFIX_VERSION}"
+#SH#ICULIBS_CTESTFW="-l${LIBICU}${CTESTFW_STUBNAME}${ICULIBSUFFIX}${ICULIBSUFFIX_VERSION}"
+#SH#ICULIBS_ICUIO="-l${LIBICU}${IO_STUBNAME}${ICULIBSUFFIX}${ICULIBSUFFIX_VERSION}"
+#SH#ICULIBS_OBSOLETE="-l${LIBICU}obsolete${ICULIBSUFFIX}${ICULIBSUFFIX_VERSION}"
+#SH#ICULIBS_LAYOUT="-l${LIBICU}${LAYOUT_STUBNAME}${ICULIBSUFFIX}${ICULIBSUFFIX_VERSION}"
+#SH#ICULIBS_LAYOUTEX="-l${LIBICU}${LAYOUTEX_STUBNAME}${ICULIBSUFFIX}${ICULIBSUFFIX_VERSION}"
+#SH#ICULIBS_BASE="${LIBS} -L${libdir}"
+#SH#ICULIBS="${ICULIBS_BASE} ${ICULIBS_I18N} ${ICULIBS_COMMON} ${ICULIBS_DATA}"
+
+## End OS2-specific setup

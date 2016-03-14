@@ -223,7 +223,7 @@ ICU_PROG_LINK
 # files, which confuses the AC_EXEEXT macro.
 AC_MSG_CHECKING(checking for executable suffix)
 case "${host}" in
-    *-*-cygwin*|*-*-mingw*)  EXEEXT=.exe ;;
+    *-*-cygwin*|*-*-mingw*|*-*-os2*)  EXEEXT=.exe ;;
     *)      EXEEXT="" ;;
 esac
 ac_exeext=$EXEEXT
@@ -1270,6 +1270,7 @@ case "${host}" in
 	*-*-beos)		platform=U_BEOS ;;
 	*-*-irix*)		platform=U_IRIX ;;
 	*-ncr-*)		platform=U_MPRAS ;;
+	*-*-os2*)		platform=U_OS2 ;;
 	*) 		platform=U_UNKNOWN_PLATFORM ;;
 esac
 AC_SUBST(ICUDATA_CHAR)

@@ -82,6 +82,7 @@ x86_64-*-cygwin)
 *-dec-osf*) icu_cv_host_frag=mh-alpha-osf ;;
 *-*-nto*)	icu_cv_host_frag=mh-qnx ;;
 *-ncr-*)	icu_cv_host_frag=mh-mpras ;;
+*-*-os2*)	icu_cv_host_frag=mh-os2 ;;
 *) 		icu_cv_host_frag=mh-unknown ;;
 esac
 		]

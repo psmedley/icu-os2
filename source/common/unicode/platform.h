@@ -135,6 +135,8 @@
 #define U_PF_OS390 9000
 /** "IBM i" is the current name of what used to be i5/OS and earlier OS/400. @internal */
 #define U_PF_OS400 9400
+/** "IBM OS/2 and eComStation. @internal */
+#define U_PF_OS2   9500
 
 #ifdef U_PLATFORM
     /* Use the predefined value. */
@@ -186,6 +188,8 @@
 #   define U_PLATFORM U_PF_OS390
 #elif defined(__OS400__) || defined(__TOS_OS400__)
 #   define U_PLATFORM U_PF_OS400
+#elif defined(__OS2__)
+#   define U_PLATFORM U_PF_OS2
 #else
 #   define U_PLATFORM U_PF_UNKNOWN
 #endif
@@ -658,7 +662,7 @@
      * Newer Mac OS X has size 4.
      */
 #   define U_SIZEOF_WCHAR_T 1
-#elif U_PLATFORM_HAS_WIN32_API || U_PLATFORM == U_PF_CYGWIN
+#elif U_PLATFORM_HAS_WIN32_API || U_PLATFORM == U_PF_CYGWIN || U_PLATFORM == U_PF_OS2
 #   define U_SIZEOF_WCHAR_T 2
 #elif U_PLATFORM == U_PF_AIX
     /*
@@ -775,6 +779,8 @@
     /* Use the predefined value. */
 #elif defined(U_STATIC_IMPLEMENTATION)
 #   define U_EXPORT
+#elif defined(__OS2__)
+#   define U_EXPORT __declspec(dllexport)
 #elif defined(__GNUC__)
 #   define U_EXPORT __attribute__((visibility("default")))
 #elif (defined(__SUNPRO_CC) && __SUNPRO_CC >= 0x550) \
