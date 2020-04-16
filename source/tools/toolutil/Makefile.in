@@ -136,7 +136,7 @@ $(TARGET): $(STATIC_OBJECTS)
 endif
 
 ifneq ($(ENABLE_SHARED),)
-$(SHARED_OBJECT): $(OBJECTS)
+$(SHARED_OBJECT): $(OBJECTS) $(SO_VERSION_DATA)
 	$(SHLIB.cc) $(LD_SONAME) $(OUTOPT)$@ $^ $(LIBS)
 ifeq ($(ENABLE_RPATH),YES)
 ifneq ($(wildcard $(libdir)/$(MIDDLE_SO_TARGET)),)

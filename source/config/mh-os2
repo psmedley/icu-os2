@@ -128,8 +128,13 @@ EXTRA_TARGETS = $(FINAL_IMPORT_LIB)
 ## OS/2 needs a .def file to specify DLL options
 SO_VERSION_DATA = $(if $(SHARED_OBJECT),$(notdir $(basename $(SHARED_OBJECT))).def)#M#
 
+VENDOR ?=community
+BUILD_INFO=\#\#1\#\# $(shell date +'%d %b %Y %H:%M:%S')     $(shell uname -n)
+BUILDLEVEL_INFO=@\#$(VENDOR):$(VERSION)\#@$(BUILD_INFO)::::0::
+
 %.def: $(MAKEFILE_LIST)
 	echo "LIBRARY $(notdir $(basename $@)) INITINSTANCE TERMINSTANCE" > $@
+	echo "DESCRIPTION \"$(BUILDLEVEL_INFO)@@$(notdir $(basename $@))\"" >> $@
 	echo "DATA MULTIPLE NONSHARED" >> $@
 
 ##  Bind internal references
