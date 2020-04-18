@@ -1414,9 +1414,9 @@ static int32_t pkg_generateLibraryFile(UPKGOptions *o, const char *targetDir, co
 #elif U_PLATFORM == U_PF_MINGW
             length += static_cast<int32_t>(uprv_strlen(targetDir) + uprv_strlen(libFileNames[LIB_FILE_MINGW]));
 #elif U_PLATFORM == U_PF_OS2
-            length += static_cast<int32_t>256 + uprv_strlen(targetDir) * 5 + uprv_strlen(libFileNames[LIB_FILE]) * 6 +
+            length += static_cast<int32_t>(256 + uprv_strlen(targetDir) * 5 + uprv_strlen(libFileNames[LIB_FILE]) * 6 +
                       uprv_strlen(o->version == NULL ? "" : o->version) +
-                      uprv_strlen(o->entryName) + uprv_strlen(UDATA_CMN_INTERMEDIATE_SUFFIX);
+                      uprv_strlen(o->entryName) + uprv_strlen(UDATA_CMN_INTERMEDIATE_SUFFIX));
 #endif
             if ((cmd = (char *)uprv_malloc(sizeof(char) * length)) == NULL) {
                 fprintf(stderr, "Unable to allocate memory for command.\n");
