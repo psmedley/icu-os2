@@ -912,7 +912,11 @@ static void TestDataDirectory()
 
     char            oldDirectory[512];
     const char     *temp,*testValue1,*testValue2,*testValue3;
+#ifdef __OS2__
+    const char path[40] ="d:/icu/source/test/intltest" U_FILE_SEP_STRING; /*give the required path */
+#else
     const char path[40] ="d:\\icu\\source\\test\\intltest" U_FILE_SEP_STRING; /*give the required path */
+#endif
 
     log_verbose("Testing getDataDirectory()\n");
     temp = u_getDataDirectory();

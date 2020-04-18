@@ -77,9 +77,11 @@ distclean-local: clean-local
 check-local: all-local
 	@echo Testing test-nochange.cpp
 	@$(INVOKE) $(TARGET) $(srcdir)/test-nochange.cpp ./output-nochange.cpp
+	dos2unix ./output-nochange.cpp
 	@-diff -I '#line.*' $(srcdir)/test-nochange.cpp ./output-nochange.cpp || (echo >&2 'warning: diff failed or not found' ; true)
 	@echo Testing test-simple.cpp
 	@$(INVOKE) $(TARGET) $(srcdir)/test-simple.cpp ./output-simple.cpp
+	dos2unix ./output-simple.cpp
 	@-diff -I '#line.*' $(srcdir)/expect-simple.cpp ./output-simple.cpp   || (echo >&2 'warning: diff failed or not found' ; true)
 
 Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
