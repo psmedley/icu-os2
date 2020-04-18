@@ -125,17 +125,17 @@ EXTRA_TARGETS = $(FINAL_IMPORT_LIB)
 %$(IMPORT_LIB_EXT): %.$(SO)
 	emximp -o $@ $<
 
-## OS/2 needs a .def file to specify DLL options
+## OS/2 needs a .def file to specify DLL options#M#
 SO_VERSION_DATA = $(if $(SHARED_OBJECT),$(notdir $(basename $(SHARED_OBJECT))).def)#M#
 
-VENDOR ?=community
-BUILD_INFO=\#\#1\#\# $(shell date +'%d %b %Y %H:%M:%S')     $(shell uname -n)
-BUILDLEVEL_INFO=@\#$(VENDOR):$(VERSION)\#@$(BUILD_INFO)::::0::
+VENDOR ?=community#M#
+BUILD_INFO=\#\#1\#\# $(shell date +'%d %b %Y %H:%M:%S')     $(shell uname -n)#M#
+BUILDLEVEL_INFO=@\#$(VENDOR):$(VERSION)\#@$(BUILD_INFO)::::0::#M#
 
-%.def: $(MAKEFILE_LIST)
-	echo "LIBRARY $(notdir $(basename $@)) INITINSTANCE TERMINSTANCE" > $@
-	echo "DESCRIPTION \"$(BUILDLEVEL_INFO)@@$(notdir $(basename $@))\"" >> $@
-	echo "DATA MULTIPLE NONSHARED" >> $@
+%.def: $(MAKEFILE_LIST) #M#
+	echo "LIBRARY $(notdir $(basename $@)) INITINSTANCE TERMINSTANCE" > $@ #M#
+	echo "DESCRIPTION \"$(BUILDLEVEL_INFO)@@$(notdir $(basename $@))\"" >> $@ #M#
+	echo "DATA MULTIPLE NONSHARED" >> $@ #M#
 
 ##  Bind internal references
 
