@@ -70,6 +70,9 @@
     <ClCompile Include="rbbitst.cpp">
       <Filter>break iteration</Filter>
     </ClCompile>
+    <ClCompile Include="rbbimonkeytest.cpp">
+      <Filter>break iteration</Filter>
+    </ClCompile>
     <ClCompile Include="itspoof.cpp">
       <Filter>spoof detection</Filter>
     </ClCompile>
@@ -148,9 +151,6 @@
     <ClCompile Include="simplethread.cpp">
       <Filter>configuration</Filter>
     </ClCompile>
-    <ClCompile Include="strtest.cpp">
-      <Filter>configuration</Filter>
-    </ClCompile>
     <ClCompile Include="tsmthred.cpp">
       <Filter>configuration</Filter>
     </ClCompile>
@@ -217,6 +217,9 @@
     <ClCompile Include="fldset.cpp">
       <Filter>formatting</Filter>
     </ClCompile>
+    <ClCompile Include="formatted_string_builder_test.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
     <ClCompile Include="genderinfotest.cpp">
       <Filter>formatting</Filter>
     </ClCompile>
@@ -256,10 +259,46 @@
     <ClCompile Include="numberformattesttuple.cpp">
       <Filter>formatting</Filter>
     </ClCompile>
-    <ClCompile Include="numberformat2test.cpp">
+    <ClCompile Include="numbertest_affixutils.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="numbertest_api.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="numbertest_decimalquantity.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="numbertest_modifiers.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="numbertest_patternmodifier.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="numbertest_patternstring.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="string_segment_test.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="numbertest_parse.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="numbertest_doubleconversion.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="numbertest_skeletons.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="numbertest_range.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="numbertest_permutation.cpp">
       <Filter>formatting</Filter>
     </ClCompile>
     <ClCompile Include="numfmtst.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="numfmtdatadriventest.cpp">
       <Filter>formatting</Filter>
     </ClCompile>
     <ClCompile Include="numrgts.cpp">
@@ -292,7 +331,10 @@
     <ClCompile Include="selfmts.cpp">
       <Filter>formatting</Filter>
     </ClCompile>
-    <ClCompile Include="simplepatternformattertest.cpp">
+    <ClCompile Include="simpleformattertest.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="static_unisets_test.cpp">
       <Filter>formatting</Filter>
     </ClCompile>
     <ClCompile Include="tchcfmt.cpp">
@@ -352,7 +394,7 @@
     <ClCompile Include="nptrans.cpp">
       <Filter>idna</Filter>
     </ClCompile>
-    <ClCompile Include="punyref.c">
+    <ClCompile Include="punyref.cpp">
       <Filter>idna</Filter>
     </ClCompile>
     <ClCompile Include="testidn.cpp">
@@ -433,6 +475,9 @@
     <ClCompile Include="strcase.cpp">
       <Filter>strings</Filter>
     </ClCompile>
+    <ClCompile Include="strtest.cpp">
+      <Filter>strings</Filter>
+    </ClCompile>
     <ClCompile Include="ustrtest.cpp">
       <Filter>strings</Filter>
     </ClCompile>
@@ -493,6 +538,18 @@
     <ClCompile Include="ucharstrietest.cpp">
       <Filter>data &amp; memory</Filter>
     </ClCompile>
+    <ClCompile Include="erarulestest.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="formattedvaluetest.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="localebuildertest.cpp">
+      <Filter>locales &amp; resources</Filter>
+    </ClCompile>
+    <ClCompile Include="localematchertest.cpp">
+      <Filter>locales &amp; resources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="itrbbi.h">
@@ -502,6 +559,9 @@
       <Filter>break iteration</Filter>
     </ClInclude>
     <ClInclude Include="rbbitst.h">
+      <Filter>break iteration</Filter>
+    </ClInclude>
+    <ClInclude Include="rbbimonkeytest.h">
       <Filter>break iteration</Filter>
     </ClInclude>
     <ClInclude Include="itspoof.h">
@@ -577,9 +637,6 @@
       <Filter>collections</Filter>
     </ClInclude>
     <ClInclude Include="simplethread.h">
-      <Filter>configuration</Filter>
-    </ClInclude>
-    <ClInclude Include="strtest.h">
       <Filter>configuration</Filter>
     </ClInclude>
     <ClInclude Include="tsmthred.h">
@@ -676,6 +733,9 @@
       <Filter>formatting</Filter>
     </ClInclude>
     <ClInclude Include="numberformattesttuple.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="numbertest.h">
       <Filter>formatting</Filter>
     </ClInclude>
     <ClInclude Include="numfmtst.h">
@@ -825,6 +885,9 @@
     <ClInclude Include="sfwdchit.h">
       <Filter>strings</Filter>
     </ClInclude>
+    <ClInclude Include="strtest.h">
+      <Filter>strings</Filter>
+    </ClInclude>
     <ClInclude Include="ustrtest.h">
       <Filter>strings</Filter>
     </ClInclude>
@@ -869,6 +932,12 @@
     </ClInclude>
     <ClInclude Include="listformattertest.h">
       <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="erarulestest.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="localebuildertest.h">
+      <Filter>locales &amp; resources</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

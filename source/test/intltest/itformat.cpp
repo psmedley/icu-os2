@@ -1,3 +1,5 @@
+// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT:
  * Copyright (c) 1997-2015, International Business Machines
@@ -53,21 +55,25 @@
 #include "plurfmts.h"       // PluralFormatTest
 #include "selfmts.h"       // PluralFormatTest
 #include "dtifmtts.h"       // DateIntervalFormatTest
-#include "tufmtts.h"        // TimeUnitTest
 #include "locnmtst.h"       // LocaleDisplayNamesTest
 #include "dcfmtest.h"       // DecimalFormatTest
 #include "listformattertest.h"  // ListFormatterTest
 #include "regiontst.h"      // RegionTest
+#include "numbertest.h"     // NumberTest
+#include "erarulestest.h"   // EraRulesTest
 
 extern IntlTest *createCompactDecimalFormatTest();
 extern IntlTest *createGenderInfoTest();
 #if !UCONFIG_NO_BREAK_ITERATION
 extern IntlTest *createRelativeDateTimeFormatterTest();
 #endif
+extern IntlTest *createTimeUnitTest();
 extern IntlTest *createMeasureFormatTest();
 extern IntlTest *createNumberFormatSpecificationTest();
 extern IntlTest *createScientificNumberFormatterTest();
-extern IntlTest *createNumberFormat2Test(); 
+extern IntlTest *createFormattedValueTest();
+extern IntlTest *createFormattedStringBuilderTest();
+extern IntlTest *createStringSegmentTest();
 
 
 #define TESTCLASS(id, TestClass)          \
@@ -139,7 +145,15 @@ void IntlTestFormat::runIndexedTest( int32_t index, UBool exec, const char* &nam
         TESTCLASS(35,PluralRulesTest);
         TESTCLASS(36,PluralFormatTest);
         TESTCLASS(37,DateIntervalFormatTest);
-        TESTCLASS(38,TimeUnitTest);
+        case 38:
+          name = "TimeUnitTest";
+          if (exec) {
+            logln("TimeUnitTest test---");
+            logln((UnicodeString)"");
+            LocalPointer<IntlTest> test(createTimeUnitTest());
+            callTest(*test, par);
+          }
+          break;
         TESTCLASS(39,SelectFormatTest);
         TESTCLASS(40,LocaleDisplayNamesTest);
 #if !UCONFIG_NO_REGULAR_EXPRESSIONS
@@ -194,7 +208,7 @@ void IntlTestFormat::runIndexedTest( int32_t index, UBool exec, const char* &nam
             callTest(*test, par);
           }
           break;
-       case 49:
+        case 49:
           name = "ScientificNumberFormatterTest";
           if (exec) {
             logln("ScientificNumberFormatterTest test---");
@@ -203,15 +217,36 @@ void IntlTestFormat::runIndexedTest( int32_t index, UBool exec, const char* &nam
             callTest(*test, par);
           }
           break;
-      case 50: 
-        name = "NumberFormat2Test"; 
-          if (exec) { 
-            logln("NumberFormat2Test test---"); 
-            logln((UnicodeString)""); 
-            LocalPointer<IntlTest> test(createNumberFormat2Test()); 
-            callTest(*test, par); 
-          } 
-          break; 
+        TESTCLASS(50,NumberFormatDataDrivenTest);
+        TESTCLASS(51,NumberTest);
+        TESTCLASS(52,EraRulesTest);
+        case 53:
+          name = "FormattedValueTest";
+          if (exec) {
+            logln("FormattedValueTest test---");
+            logln((UnicodeString)"");
+            LocalPointer<IntlTest> test(createFormattedValueTest());
+            callTest(*test, par);
+          }
+          break;
+        case 54:
+          name = "FormattedStringBuilderTest";
+          if (exec) {
+            logln("FormattedStringBuilderTest test---");
+            logln((UnicodeString)"");
+            LocalPointer<IntlTest> test(createFormattedStringBuilderTest());
+            callTest(*test, par);
+          }
+          break;
+        case 55:
+          name = "StringSegmentTest";
+          if (exec) {
+            logln("StringSegmentTest test---");
+            logln((UnicodeString)"");
+            LocalPointer<IntlTest> test(createStringSegmentTest());
+            callTest(*test, par);
+          }
+          break;
         default: name = ""; break; //needed to end loop
     }
     if (exec) {

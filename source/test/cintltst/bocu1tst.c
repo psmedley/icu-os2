@@ -1,3 +1,5 @@
+// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 ******************************************************************************
 *
@@ -6,7 +8,7 @@
 *
 ******************************************************************************
 *   file name:  bocu1tst.c
-*   encoding:   US-ASCII
+*   encoding:   UTF-8
 *   tab size:   8 (not used)
 *   indentation:4
 *
@@ -210,14 +212,14 @@ bocu1TrailToByte[BOCU1_TRAIL_CONTROLS_COUNT]={
  * @param d Divisor.
  * @param m Output variable for the rest (modulo result).
  */
-#define NEGDIVMOD(n, d, m) { \
+#define NEGDIVMOD(n, d, m) UPRV_BLOCK_MACRO_BEGIN { \
     (m)=(n)%(d); \
     (n)/=(d); \
     if((m)<0) { \
         --(n); \
         (m)+=(d); \
     } \
-}
+} UPRV_BLOCK_MACRO_END
 
 /* State for BOCU-1 decoder function. */
 struct Bocu1Rx {
@@ -342,7 +344,7 @@ packDiff(int32_t diff) {
     } while(--count>0);
 
     /* add lead byte */
-    result|=(lead+diff)<<shift;
+    result |= (uint32_t)(lead+diff)<<shift;
 
     return result;
 }

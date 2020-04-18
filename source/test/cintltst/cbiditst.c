@@ -1,10 +1,12 @@
+// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT:
  * Copyright (c) 1997-2014, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 /*   file name:  cbiditst.c
-*   encoding:   US-ASCII
+*   encoding:   UTF-8
 *   tab size:   8 (not used)
 *   indentation:4
 *
@@ -88,6 +90,7 @@ static void testContext(void);
 static void doTailTest(void);
 
 static void testBracketOverflow(void);
+static void TestExplicitLevel0(void);
 
 /* new BIDI API */
 static void testReorderingMode(void);
@@ -136,6 +139,7 @@ addComplexTest(TestNode** root) {
     addTest(root, testGetBaseDirection, "complex/bidi/testGetBaseDirection");
     addTest(root, testContext, "complex/bidi/testContext");
     addTest(root, testBracketOverflow, "complex/bidi/TestBracketOverflow");
+    addTest(root, TestExplicitLevel0, "complex/bidi/TestExplicitLevel0");
 
     addTest(root, doArabicShapingTest, "complex/arabic-shaping/ArabicShapingTest");
     addTest(root, doLamAlefSpecialVLTRArabicShapingTest, "complex/arabic-shaping/lamalef");
@@ -255,6 +259,9 @@ static void buildPseudoTables(void)
     - A-F == Arabic Letters 0631-0636
     - G-V == Hebrew letters 05d7-05e6
     - W-Z == Unassigned RTL 08d0-08d3
+        Unicode 6.1 changes U+08A0..U+08FF from R to AL which works ok.
+        Unicode 11 adds U+08D3 ARABIC SMALL LOW WAW which has bc=NSM
+            so we stop using Z in this test.
     - 0-5 == western digits 0030-0035
     - 6-9 == Arabic-Indic digits 0666-0669
     - ` == Combining Grave Accent 0300 (NSM)
@@ -391,9 +398,9 @@ static int u16ToPseudo(const int length, const UChar * input, char * output)
 static char * formatLevels(UBiDi *bidi, char *buffer) {
     UErrorCode ec = U_ZERO_ERROR;
     const UBiDiLevel* gotLevels = ubidi_getLevels(bidi, &ec);
-    int len = ubidi_getLength(bidi);
+    int32_t len = ubidi_getLength(bidi);
     char c;
-    int i, k;
+    int32_t i, k;
 
     if(U_FAILURE(ec)) {
         strcpy(buffer, "BAD LEVELS");
@@ -401,7 +408,7 @@ static char * formatLevels(UBiDi *bidi, char *buffer) {
     }
     for (i=0; i<len; i++) {
         k = gotLevels[i];
-        if (k >= sizeof(columns))
+        if (k >= (int32_t)sizeof(columns))
             c = '+';
         else
             c = columns[k];
@@ -507,7 +514,7 @@ static UBool matchingPair(UBiDi *bidi, int32_t i, char c1, char c2)
     if ((level & 1) == 0) {
         return FALSE;
     }
-    len = strlen(mates1Chars);
+    len = (int)strlen(mates1Chars);
     for (k = 0; k < len; k++) {
         if ((c1 == mates1Chars[k]) && (c2 == mates2Chars[k])) {
             return TRUE;
@@ -652,7 +659,7 @@ testReorder(void) {
             "day  4   I  DPIQNF    dayabbr",
             "day  5  M  DPMEG  dayabbr",
             "helloDPMEG",
-            "hello WXYZ"
+            "hello WXY"
     };
     static const char* const visualOrder[]={
             "del(CK)add(&.C.K)",
@@ -666,7 +673,7 @@ testReorder(void) {
             "day  4   FNQIPD  I    dayabbr",
             "day  5  GEMPD  M  dayabbr",
             "helloGEMPD",
-            "hello ZYXW"
+            "hello YXW"
     };
     static const char* const visualOrder1[]={
             ")K.C.&(dda)KC(led",
@@ -680,7 +687,7 @@ testReorder(void) {
             "rbbayad    I  DPIQNF   4  yad",
             "rbbayad  M  DPMEG  5  yad",
             "DPMEGolleh",
-            "WXYZ olleh"
+            "WXY olleh"
     };
 
     static const char* const visualOrder2[]={
@@ -695,7 +702,7 @@ testReorder(void) {
             "rbbayad    @I  DPIQNF@   4  yad",
             "rbbayad  @M  DPMEG@  5  yad",
             "DPMEGolleh",
-            "WXYZ@ olleh"
+            "WXY@ olleh"
     };
     static const char* const visualOrder3[]={
             ")K.C.&(KC)dda(led",
@@ -709,7 +716,7 @@ testReorder(void) {
             "rbbayad    DPIQNF     I 4 yad",
             "rbbayad  DPMEG   M  5 yad",
             "DPMEGolleh",
-            "WXYZ olleh"
+            "WXY olleh"
     };
     static const char* const visualOrder4[]={
             "del(add(CK(.C.K)",
@@ -723,7 +730,7 @@ testReorder(void) {
             "day 4 I     FNQIPD    dayabbr",
             "day 5  M   GEMPD  dayabbr",
             "helloGEMPD",
-            "hello ZYXW"
+            "hello YXW"
     };
     char formatChars[MAXLEN];
     UErrorCode ec = U_ZERO_ERROR;
@@ -1280,11 +1287,12 @@ _testReordering(UBiDi *pBiDi, int testNumber) {
     }
 }
 
-#define RETURN_IF_BAD_ERRCODE(x)    \
+#define RETURN_IF_BAD_ERRCODE(x) UPRV_BLOCK_MACRO_BEGIN { \
     if (U_FAILURE(errorCode)) {      \
         log_err("\nbad errorCode %d at %s\n", errorCode, (x));  \
         return;     \
     }               \
+} UPRV_BLOCK_MACRO_END
 
 #define STRING_TEST_CASE(s) { (s), UPRV_LENGTHOF(s) }
 
@@ -4119,7 +4127,7 @@ checkResultLength(UBiDi *pBiDi, const char *srcChars, const char *destChars,
                   const char* option, UBiDiLevel level) {
     int32_t actualLen;
     if (strcmp(mode, "UBIDI_REORDER_INVERSE_NUMBERS_AS_L") == 0)
-        actualLen = strlen(destChars);
+        actualLen = (int32_t)strlen(destChars);
     else
         actualLen = ubidi_getResultLength(pBiDi);
     if (actualLen != destLen) {
@@ -4199,7 +4207,7 @@ testReorderRunsOnly(void) {
         ubidi_setReorderingOptions(pBiDi, option==0 ? UBIDI_OPTION_REMOVE_CONTROLS
                                                     : UBIDI_OPTION_INSERT_MARKS);
         for (i = 0, nCases = UPRV_LENGTHOF(testCases); i < nCases; i++) {
-            srcLen = strlen(testCases[i].textIn);
+            srcLen = (int32_t)strlen(testCases[i].textIn);
             pseudoToU16(srcLen, testCases[i].textIn, src);
             for(j = 0; j < 2; j++) {
                 log_verbose("Now doing test for option %d, case %d, level %d\n",
@@ -4285,7 +4293,7 @@ testReorderingMode(void) {
 
     for (tc = 0; tc < TC_COUNT; tc++) {
         const char *srcChars = textIn[tc];
-        srcLen = strlen(srcChars);
+        srcLen = (int32_t)strlen(srcChars);
         pseudoToU16(srcLen, srcChars, src);
 
         for (mode = 0; mode < MODES_COUNT; mode++) {
@@ -4623,7 +4631,7 @@ static char * formatMap(const int32_t * map, int len, char * buffer)
         k = map[i];
         if (k < 0)
             c = '-';
-        else if (k >= sizeof(columns))
+        else if (k >= (int32_t)sizeof(columns))
             c = '+';
         else
             c = columns[k];
@@ -4857,9 +4865,9 @@ testContext(void) {
 
     for (tc = 0; tc < CONTEXT_COUNT; tc++) {
         cc = contextData[tc];
-        proLength = strlen(cc.prologue);
+        proLength = (int32_t)strlen(cc.prologue);
         pseudoToU16(proLength, cc.prologue, prologue);
-        epiLength = strlen(cc.epilogue);
+        epiLength = (int32_t)strlen(cc.epilogue);
         pseudoToU16(epiLength, cc.epilogue, epilogue);
         /* in the call below, prologue and epilogue are swapped to show
            that the next call will override this call */
@@ -4868,7 +4876,7 @@ testContext(void) {
         testOK &= assertSuccessful("swapped ubidi_setContext", &rc);
         ubidi_setContext(pBiDi, prologue, -1, epilogue, -1, &rc);
         testOK &= assertSuccessful("regular ubidi_setContext", &rc);
-        srcLen = strlen(cc.source);
+        srcLen = (int32_t)strlen(cc.source);
         pseudoToU16(srcLen, cc.source, src);
         ubidi_setPara(pBiDi, src, srcLen, cc.paraLevel, NULL, &rc);
         testOK &= assertSuccessful("ubidi_setPara", &rc);
@@ -4910,7 +4918,7 @@ testBracketOverflow(void) {
     int32_t len;
 
     bidi = ubidi_open();
-    len = uprv_strlen(TEXT);
+    len = (int32_t)uprv_strlen(TEXT);
     pseudoToU16(len, TEXT, src);
     ubidi_setPara(bidi, src, len, UBIDI_DEFAULT_LTR , NULL, &status);
     if (U_FAILURE(status)) {
@@ -4920,3 +4928,24 @@ testBracketOverflow(void) {
     ubidi_close(bidi);
 }
 
+static void TestExplicitLevel0(void) {
+    // The following used to fail with an error, see ICU ticket #12922.
+    static const UChar text[2] = { 0x202d, 0x05d0 };
+    static UBiDiLevel embeddings[2] = { 0, 0 };
+    UErrorCode errorCode = U_ZERO_ERROR;
+    UBiDi *bidi = ubidi_open();
+    ubidi_setPara(bidi, text, 2, UBIDI_DEFAULT_LTR , embeddings, &errorCode);
+    if (U_FAILURE(errorCode)) {
+        log_err("ubidi_setPara() - %s", u_errorName(errorCode));
+    } else {
+        UBiDiLevel level0 = ubidi_getLevelAt(bidi, 0);
+        UBiDiLevel level1 = ubidi_getLevelAt(bidi, 1);
+        if (level0 != 1 || level1 != 1) {
+            log_err("resolved levels != 1: { %d, %d }\n", level0, level1);
+        }
+        if (embeddings[0] != 1 || embeddings[1] != 1) {
+            log_err("modified embeddings[] levels != 1: { %d, %d }\n", embeddings[0], embeddings[1]);
+        }
+    }
+    ubidi_close(bidi);
+}

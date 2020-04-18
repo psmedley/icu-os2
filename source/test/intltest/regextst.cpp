@@ -1,6 +1,8 @@
+// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT:
- * Copyright (c) 2002-2015, International Business Machines Corporation and
+ * Copyright (c) 2002-2016, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 
@@ -36,7 +38,8 @@
 #include "unicode/usetiter.h"
 #include "unicode/ustring.h"
 #include "unicode/utext.h"
-
+#include "unicode/utf16.h"
+#include "cstr.h"
 #include "regextst.h"
 #include "regexcmp.h"
 #include "uvector.h"
@@ -66,105 +69,44 @@ RegexTest::~RegexTest()
 void RegexTest::runIndexedTest( int32_t index, UBool exec, const char* &name, char* /*par*/ )
 {
     if (exec) logln("TestSuite RegexTest: ");
-    switch (index) {
-
-        case 0: name = "Basic";
-            if (exec) Basic();
-            break;
-        case 1: name = "API_Match";
-            if (exec) API_Match();
-            break;
-        case 2: name = "API_Replace";
-            if (exec) API_Replace();
-            break;
-        case 3: name = "API_Pattern";
-            if (exec) API_Pattern();
-            break;
-        case 4:
+    TESTCASE_AUTO_BEGIN;
+    TESTCASE_AUTO(Basic);
+    TESTCASE_AUTO(API_Match);
+    TESTCASE_AUTO(API_Replace);
+    TESTCASE_AUTO(API_Pattern);
 #if !UCONFIG_NO_FILE_IO
-            name = "Extended";
-            if (exec) Extended();
-#else
-            name = "skip";
+    TESTCASE_AUTO(Extended);
 #endif
-            break;
-        case 5: name = "Errors";
-            if (exec) Errors();
-            break;
-        case 6: name = "PerlTests";
-            if (exec) PerlTests();
-            break;
-        case 7: name = "Callbacks";
-            if (exec) Callbacks();
-            break;
-        case 8: name = "FindProgressCallbacks";
-            if (exec) FindProgressCallbacks();
-            break;
-        case 9: name = "Bug 6149";
-             if (exec) Bug6149();
-             break;
-        case 10: name = "UTextBasic";
-          if (exec) UTextBasic();
-          break;
-        case 11: name = "API_Match_UTF8";
-          if (exec) API_Match_UTF8();
-          break;
-        case 12: name = "API_Replace_UTF8";
-          if (exec) API_Replace_UTF8();
-          break;
-        case 13: name = "API_Pattern_UTF8";
-          if (exec) API_Pattern_UTF8();
-          break;
-        case 14: name = "PerlTestsUTF8";
-          if (exec) PerlTestsUTF8();
-          break;
-        case 15: name = "PreAllocatedUTextCAPI";
-          if (exec) PreAllocatedUTextCAPI();
-          break;
-        case 16: name = "Bug 7651";
-             if (exec) Bug7651();
-             break;
-        case 17: name = "Bug 7740";
-            if (exec) Bug7740();
-            break;
-        case 18: name = "Bug 8479";
-            if (exec) Bug8479();
-            break;
-        case 19: name = "Bug 7029";
-            if (exec) Bug7029();
-            break;
-        case 20: name = "CheckInvBufSize";
-            if (exec) CheckInvBufSize();
-            break;
-        case 21: name = "Bug 9283";
-            if (exec) Bug9283();
-            break;
-        case 22: name = "Bug10459";
-            if (exec) Bug10459();
-            break;
-        case 23: name = "TestCaseInsensitiveStarters";
-            if (exec) TestCaseInsensitiveStarters();
-            break;
-        case 24: name = "TestBug11049";
-            if (exec) TestBug11049();
-            break;
-        case 25: name = "TestBug11371";
-            if (exec) TestBug11371();
-            break;
-        case 26: name = "TestBug11480";
-            if (exec) TestBug11480();
-            break;
-        case 27: name = "NamedCapture";
-            if (exec) NamedCapture();
-            break;
-        case 28: name = "NamedCaptureLimits";
-            if (exec) NamedCaptureLimits();
-            break;
-        default: name = "";
-            break; //needed to end loop
-    }
+    TESTCASE_AUTO(Errors);
+    TESTCASE_AUTO(PerlTests);
+    TESTCASE_AUTO(Callbacks);
+    TESTCASE_AUTO(FindProgressCallbacks);
+    TESTCASE_AUTO(Bug6149);
+    TESTCASE_AUTO(UTextBasic);
+    TESTCASE_AUTO(API_Match_UTF8);
+    TESTCASE_AUTO(API_Replace_UTF8);
+    TESTCASE_AUTO(API_Pattern_UTF8);
+    TESTCASE_AUTO(PerlTestsUTF8);
+    TESTCASE_AUTO(PreAllocatedUTextCAPI);
+    TESTCASE_AUTO(Bug7651);
+    TESTCASE_AUTO(Bug7740);
+    TESTCASE_AUTO(Bug8479);
+    TESTCASE_AUTO(Bug7029);
+    TESTCASE_AUTO(CheckInvBufSize);
+    TESTCASE_AUTO(Bug9283);
+    TESTCASE_AUTO(Bug10459);
+    TESTCASE_AUTO(TestCaseInsensitiveStarters);
+    TESTCASE_AUTO(TestBug11049);
+    TESTCASE_AUTO(TestBug11371);
+    TESTCASE_AUTO(TestBug11480);
+    TESTCASE_AUTO(NamedCapture);
+    TESTCASE_AUTO(NamedCaptureLimits);
+    TESTCASE_AUTO(TestBug12884);
+    TESTCASE_AUTO(TestBug13631);
+    TESTCASE_AUTO(TestBug13632);
+    TESTCASE_AUTO(TestBug20359);
+    TESTCASE_AUTO_END;
 }
-
 
 
 /**
@@ -235,29 +177,56 @@ const char* RegexTest::extractToAssertBuf(const UnicodeString& message) {
   return ASSERT_BUF;
 }
 
-#define REGEX_VERBOSE_TEXT(text) {char buf[200];utextToPrintable(buf,sizeof(buf)/sizeof(buf[0]),text);logln("%s:%d: UText %s=\"%s\"", __FILE__, __LINE__, #text, buf);}
+#define REGEX_VERBOSE_TEXT(text) UPRV_BLOCK_MACRO_BEGIN { \
+    char buf[200]; \
+    utextToPrintable(buf,UPRV_LENGTHOF(buf),text); \
+    logln("%s:%d: UText %s=\"%s\"", __FILE__, __LINE__, #text, buf); \
+} UPRV_BLOCK_MACRO_END
 
-#define REGEX_CHECK_STATUS {if (U_FAILURE(status)) {dataerrln("%s:%d: RegexTest failure.  status=%s", \
-                                                              __FILE__, __LINE__, u_errorName(status)); return;}}
+#define REGEX_CHECK_STATUS UPRV_BLOCK_MACRO_BEGIN { \
+    if (U_FAILURE(status)) { \
+        dataerrln("%s:%d: RegexTest failure.  status=%s", \
+                  __FILE__, __LINE__, u_errorName(status)); \
+        return; \
+    } \
+} UPRV_BLOCK_MACRO_END
 
-#define REGEX_ASSERT(expr) {if ((expr)==FALSE) {errln("%s:%d: RegexTest failure: REGEX_ASSERT(%s) failed \n", __FILE__, __LINE__, #expr);};}
+#define REGEX_ASSERT(expr) UPRV_BLOCK_MACRO_BEGIN { \
+    if ((expr)==FALSE) { \
+        errln("%s:%d: RegexTest failure: REGEX_ASSERT(%s) failed \n", __FILE__, __LINE__, #expr); \
+    } \
+} UPRV_BLOCK_MACRO_END
 
-#define REGEX_ASSERT_FAIL(expr, errcode) {UErrorCode status=U_ZERO_ERROR; (expr);\
-if (status!=errcode) {dataerrln("RegexTest failure at line %d.  Expected status=%s, got %s", \
-    __LINE__, u_errorName(errcode), u_errorName(status));};}
+#define REGEX_ASSERT_FAIL(expr, errcode) UPRV_BLOCK_MACRO_BEGIN { \
+    UErrorCode status=U_ZERO_ERROR; \
+    (expr); \
+    if (status!=errcode) { \
+        dataerrln("RegexTest failure at line %d.  Expected status=%s, got %s", \
+                  __LINE__, u_errorName(errcode), u_errorName(status)); \
+    } \
+} UPRV_BLOCK_MACRO_END
 
-#define REGEX_CHECK_STATUS_L(line) {if (U_FAILURE(status)) {errln( \
-    "RegexTest failure at line %d, from %d.  status=%d\n",__LINE__, (line), status); }}
+#define REGEX_CHECK_STATUS_L(line) UPRV_BLOCK_MACRO_BEGIN { \
+    if (U_FAILURE(status)) { \
+        errln("RegexTest failure at line %d, from %d.  status=%d\n",__LINE__, (line), status); \
+    } \
+} UPRV_BLOCK_MACRO_END
 
-#define REGEX_ASSERT_L(expr, line) {if ((expr)==FALSE) { \
-    errln("RegexTest failure at line %d, from %d.", __LINE__, (line)); return;}}
+#define REGEX_ASSERT_L(expr, line) UPRV_BLOCK_MACRO_BEGIN { \
+    if ((expr)==FALSE) { \
+        errln("RegexTest failure at line %d, from %d.", __LINE__, (line)); \
+        return; \
+    } \
+} UPRV_BLOCK_MACRO_END
 
 // expected: const char * , restricted to invariant characters.
 // actual: const UnicodeString &
-#define REGEX_ASSERT_UNISTR(expected, actual) { \
+#define REGEX_ASSERT_UNISTR(expected, actual) UPRV_BLOCK_MACRO_BEGIN { \
     if (UnicodeString(expected, -1, US_INV) != (actual)) { \
         errln("%s:%d: RegexTest failure: REGEX_ASSERT_UNISTR(%s, %s) failed \n",  \
-                __FILE__, __LINE__, expected, extractToAssertBuf(actual));};}
+              __FILE__, __LINE__, expected, extractToAssertBuf(actual)); \
+    } \
+} UPRV_BLOCK_MACRO_END
 
 
 static UBool testUTextEqual(UText *uta, UText *utb) {
@@ -295,8 +264,8 @@ void RegexTest::assertUText(const char *expected, UText *actual, const char *fil
     if (!testUTextEqual(&expectedText, actual)) {
         char buf[201 /*21*/];
         char expectedBuf[201];
-        utextToPrintable(buf, sizeof(buf)/sizeof(buf[0]), actual);
-        utextToPrintable(expectedBuf, sizeof(expectedBuf)/sizeof(expectedBuf[0]), &expectedText);
+        utextToPrintable(buf, UPRV_LENGTHOF(buf), actual);
+        utextToPrintable(expectedBuf, UPRV_LENGTHOF(expectedBuf), &expectedText);
         errln("%s:%d: assertUText: Failure: expected \"%s\" (%d chars), got \"%s\" (%d chars)", file, line, expectedBuf, (int)utext_nativeLength(&expectedText), buf, (int)utext_nativeLength(actual));
     }
     utext_close(&expectedText);
@@ -317,8 +286,8 @@ void RegexTest::assertUTextInvariant(const char *expected, UText *actual, const 
     if (!testUTextEqual(&expectedText, actual)) {
         char buf[201 /*21*/];
         char expectedBuf[201];
-        utextToPrintable(buf, sizeof(buf)/sizeof(buf[0]), actual);
-        utextToPrintable(expectedBuf, sizeof(expectedBuf)/sizeof(expectedBuf[0]), &expectedText);
+        utextToPrintable(buf, UPRV_LENGTHOF(buf), actual);
+        utextToPrintable(expectedBuf, UPRV_LENGTHOF(expectedBuf), &expectedText);
         errln("%s:%d: assertUTextInvariant: Failure: expected \"%s\" (%d uchars), got \"%s\" (%d chars)", file, line, expectedBuf, (int)utext_nativeLength(&expectedText), buf, (int)utext_nativeLength(actual));
     }
     utext_close(&expectedText);
@@ -387,7 +356,10 @@ static UText* regextst_openUTF8FromInvariant(UText *ut, const char *inv, int64_t
 //
 //---------------------------------------------------------------------------
 
-#define REGEX_TESTLM(pat, text, looking, match) {doRegexLMTest(pat, text, looking, match, __LINE__);doRegexLMTestUTF8(pat, text, looking, match, __LINE__);}
+#define REGEX_TESTLM(pat, text, looking, match) UPRV_BLOCK_MACRO_BEGIN { \
+    doRegexLMTest(pat, text, looking, match, __LINE__); \
+    doRegexLMTestUTF8(pat, text, looking, match, __LINE__); \
+} UPRV_BLOCK_MACRO_END
 
 UBool RegexTest::doRegexLMTest(const char *pat, const char *text, UBool looking, UBool match, int32_t line) {
     const UnicodeString pattern(pat, -1, US_INV);
@@ -539,7 +511,7 @@ UBool RegexTest::doRegexLMTestUTF8(const char *pat, const char *text, UBool look
 //          REGEX_ERR("pattern",   expected error line, column, expected status);
 //
 //---------------------------------------------------------------------------
-#define REGEX_ERR(pat, line, col, status) regex_err(pat, line, col, status, __LINE__);
+#define REGEX_ERR(pat, line, col, status) regex_err(pat, line, col, status, __LINE__)
 
 void RegexTest::regex_err(const char *pat, int32_t errLine, int32_t errCol,
                           UErrorCode expectedStatus, int32_t line) {
@@ -1880,8 +1852,8 @@ void RegexTest::API_Match_UTF8() {
         REGEX_VERBOSE_TEXT(&input2);
         utext_openUChars(&empty, NULL, 0, &status);
 
-        int32_t input1Len = strlen("abcdef this is a test"); /* TODO: why not nativelen (input1) ? */
-        int32_t input2Len = strlen("not abc");
+        int32_t input1Len = static_cast<int32_t>(strlen("abcdef this is a test")); /* TODO: why not nativelen (input1) ? */
+        int32_t input2Len = static_cast<int32_t>(strlen("not abc"));
 
 
         //
@@ -3553,11 +3525,16 @@ void RegexTest::regex_find(const UnicodeString &pattern,
         }
     }
     parseMatcher->appendTail(deTaggedInput);
-    REGEX_ASSERT_L(groupStarts.size() == groupEnds.size(), line);
+
+    if (groupStarts.size() != groupEnds.size()) {
+        errln("Error at line %d: mismatched <n> group tags in expected results.", line);
+        failed = true;
+        goto cleanupAndReturn;
+    }
     if ((regionStart>=0 || regionEnd>=0) && (regionStart<0 || regionStart>regionEnd)) {
-      errln("mismatched <r> tags");
-      failed = TRUE;
-      goto cleanupAndReturn;
+        errln("mismatched <r> tags");
+        failed = TRUE;
+        goto cleanupAndReturn;
     }
 
     //
@@ -3583,7 +3560,7 @@ void RegexTest::regex_find(const UnicodeString &pattern,
 
         if (UTF8Matcher == NULL) {
             // UTF-8 does not allow unpaired surrogates, so this could actually happen without being a failure of the engine
-          logln("Unable to create UTF-8 matcher, skipping UTF-8 tests for %s:%d", srcPath, line);
+            logln("Unable to create UTF-8 matcher, skipping UTF-8 tests for %s:%d", srcPath, line);
             status = U_ZERO_ERROR;
         }
     }
@@ -3592,6 +3569,9 @@ void RegexTest::regex_find(const UnicodeString &pattern,
     //  Generate native indices for UTF8 versions of region and capture group info
     //
     if (UTF8Matcher != NULL) {
+        if (flags.indexOf((UChar)0x74) >= 0) {   //  't' trace flag
+            UTF8Matcher->setTrace(TRUE);
+        }
         if (regionStart>=0)    (void) utextOffsetToNative(&inputText, regionStart, regionStartUTF8);
         if (regionEnd>=0)      (void) utextOffsetToNative(&inputText, regionEnd, regionEndUTF8);
 
@@ -3671,6 +3651,9 @@ void RegexTest::regex_find(const UnicodeString &pattern,
         }
     }
     matcher->setTrace(FALSE);
+    if (UTF8Matcher) {
+        UTF8Matcher->setTrace(FALSE);
+    }
     if (U_FAILURE(status)) {
         errln("Error at line %d. ICU ErrorCode is %s", u_errorName(status));
     }
@@ -3692,16 +3675,17 @@ void RegexTest::regex_find(const UnicodeString &pattern,
         failed = TRUE;
         goto cleanupAndReturn;
     }
+    if (isMatch && groupStarts.size() == 0) {
+        errln("Error at line %d: No match expected, but one found at position %d.", line, matcher->start(status));
+        failed = TRUE;
+    }
+    if (UTF8Matcher && isUTF8Match && groupStarts.size() == 0) {
+        errln("Error at line %d: No match expected, but one found at position %d (UTF-8).", line, UTF8Matcher->start(status));
+        failed = TRUE;
+    }
 
     if (flags.indexOf((UChar)0x47 /*G*/) >= 0) {
         // Only check for match / no match.  Don't check capture groups.
-        if (isMatch && groupStarts.size() == 0) {
-            errln("Error at line %d:  No match expected, but one found.", line);
-            failed = TRUE;
-        } else if (UTF8Matcher != NULL && isUTF8Match && groupStarts.size() == 0) {
-            errln("Error at line %d:  No match expected, but one found. (UTF8)", line);
-            failed = TRUE;
-        }
         goto cleanupAndReturn;
     }
 
@@ -3913,7 +3897,7 @@ UChar *RegexTest::ReadAndConvertFile(const char *fileName, int32_t &ulen,
     fileSize = ftell(f);
     fileBuf = new char[fileSize];
     fseek(f, 0, SEEK_SET);
-    amt_read = fread(fileBuf, 1, fileSize, f);
+    amt_read = static_cast<int32_t>(fread(fileBuf, 1, fileSize, f));
     if (amt_read != fileSize || fileSize <= 0) {
         errln("Error reading test data file.");
         goto cleanUpAndReturn;
@@ -3979,7 +3963,7 @@ cleanUpAndReturn:
         delete []retPtr;
         retPtr = 0;
         ulen   = 0;
-    };
+    }
     return retPtr;
 }
 
@@ -4806,7 +4790,7 @@ struct callBackContext {
     int32_t          maxCalls;
     int32_t          numCalls;
     int32_t          lastSteps;
-    void reset(int32_t max) {maxCalls=max; numCalls=0; lastSteps=0;};
+    void reset(int32_t max) {maxCalls=max; numCalls=0; lastSteps=0;}
 };
 
 U_CDECL_BEGIN
@@ -4909,7 +4893,7 @@ struct progressCallBackContext {
     int64_t          lastIndex;
     int32_t          maxCalls;
     int32_t          numCalls;
-    void reset(int32_t max) {maxCalls=max; numCalls=0;lastIndex=0;};
+    void reset(int32_t max) {maxCalls=max; numCalls=0;lastIndex=0;}
 };
 
 // call-back function for find().
@@ -5719,7 +5703,7 @@ void RegexTest::TestCase11049(const char *pattern, const char *data, UBool expec
     //   Size of the original char * data (invariant charset) will be <= than the equivalent UTF-8
     //   because string.unescape() will only shrink it.
     char * utf8Buffer = new char[uprv_strlen(data)+1];
-    u_strToUTF8(utf8Buffer, uprv_strlen(data)+1, NULL, dataString.getBuffer(), dataString.length(), &status);
+    u_strToUTF8(utf8Buffer, static_cast<int32_t>(uprv_strlen(data)+1), NULL, dataString.getBuffer(), dataString.length(), &status);
     REGEX_CHECK_STATUS;
     ut = utext_openUTF8(ut, utf8Buffer, -1, &status);
     REGEX_CHECK_STATUS;
@@ -5824,5 +5808,109 @@ void RegexTest::TestBug11480() {
     REGEX_CHECK_STATUS;
 }
 
+void RegexTest::TestBug12884() {
+    // setTimeLimit() was not effective for empty sub-patterns with large {minimum counts}
+    UnicodeString pattern(u"(((((((){120}){11}){11}){11}){80}){11}){4}");
+    UnicodeString text(u"hello");
+    UErrorCode status = U_ZERO_ERROR;
+    RegexMatcher m(pattern, text, 0, status);
+    REGEX_CHECK_STATUS;
+    m.setTimeLimit(5, status);
+    m.find(status);
+    REGEX_ASSERT(status == U_REGEX_TIME_OUT);
+
+    // Non-greedy loops. They take a different code path during matching.
+    UnicodeString ngPattern(u"(((((((){120}?){11}?){11}?){11}?){80}?){11}?){4}?");
+    status = U_ZERO_ERROR;
+    RegexMatcher ngM(ngPattern, text, 0, status);
+    REGEX_CHECK_STATUS;
+    ngM.setTimeLimit(5, status);
+    ngM.find(status);
+    REGEX_ASSERT(status == U_REGEX_TIME_OUT);
+
+    // UText, wrapping non-UTF-16 text, also takes a different execution path.
+    const char *text8 = u8"¿Qué es Unicode?  Unicode proporciona un número único para cada"
+                          "carácter, sin importar la plataforma, sin importar el programa,"
+                          "sin importar el idioma.";
+    status = U_ZERO_ERROR;
+    LocalUTextPointer ut(utext_openUTF8(NULL, text8, -1, &status));
+    REGEX_CHECK_STATUS;
+    m.reset(ut.getAlias());
+    m.find(status);
+    REGEX_ASSERT(status == U_REGEX_TIME_OUT);
+
+    status = U_ZERO_ERROR;
+    ngM.reset(ut.getAlias());
+    ngM.find(status);
+    REGEX_ASSERT(status == U_REGEX_TIME_OUT);
+}
+
+// Bug 13631. A find() of a pattern with a zero length look-behind assertions
+//            can cause a read past the end of the input text.
+//            The failure is seen when running this test with Clang's Addresss Sanitizer.
+
+void RegexTest::TestBug13631() {
+    const UChar *pats[] = { u"(?<!^)",
+                            u"(?<=^)",
+                            nullptr
+                          };
+    for (const UChar **pat=pats; *pat; ++pat) {
+        UErrorCode status = U_ZERO_ERROR;
+        UnicodeString upat(*pat);
+        RegexMatcher matcher(upat, 0, status);
+        const UChar s =u'a';
+        UText *ut = utext_openUChars(nullptr, &s, 1, &status);
+        REGEX_CHECK_STATUS;
+        matcher.reset(ut);
+        while (matcher.find()) {
+        }
+        utext_close(ut);
+    }
+}
+
+// Bug 13632 Out of bounds memory reference if a replacement string ends with a '$',
+//           where a following group specification would be expected.
+//           Failure shows when running the test under Clang's Address Sanitizer.
+
+void RegexTest::TestBug13632() {
+    UErrorCode status = U_ZERO_ERROR;
+    URegularExpression *re = uregex_openC(" ", 0, nullptr, &status);
+    const char16_t *sourceString = u"Hello, world.";
+    uregex_setText(re, sourceString, u_strlen(sourceString), &status);
+
+    const int32_t destCap = 20;
+    char16_t dest[destCap] = {};
+    const char16_t replacement[] = {u'x', u'$'};    // Not nul terminated string.
+    uregex_replaceAll(re, replacement, 2, dest, destCap, &status);
+
+    assertEquals("", U_REGEX_INVALID_CAPTURE_GROUP_NAME, status);
+    uregex_close(re);
+}
+
+void RegexTest::TestBug20359() {
+    // The bug was stack overflow while parsing a pattern with a huge number of adjacent \Q\E
+    // pairs. (Enter and exit pattern literal quote mode). Logic was correct.
+    // Changed implementation to loop instead of recursing.
+
+    UnicodeString pattern;
+    for (int i=0; i<50000; ++i) {
+        pattern += u"\\Q\\E";
+    }
+    pattern += u"x";
+
+    UErrorCode status = U_ZERO_ERROR;
+    LocalURegularExpressionPointer re(uregex_open(pattern.getBuffer(), pattern.length(),
+                                       0, nullptr, &status));
+    assertSuccess(WHERE, status);
+
+    // We have passed the point where the bug crashed. The following is a small sanity
+    // check that the pattern works, that all the \Q\E\Q\E... didn't cause other problems.
+
+    uregex_setText(re.getAlias(), u"abcxyz", -1, &status);
+    assertSuccess(WHERE, status);
+    assertTrue(WHERE, uregex_find(re.getAlias(), 0, &status));
+    assertEquals(WHERE, 3, uregex_start(re.getAlias(), 0, &status));
+    assertSuccess(WHERE, status);
+}
 
 #endif  /* !UCONFIG_NO_REGULAR_EXPRESSIONS  */

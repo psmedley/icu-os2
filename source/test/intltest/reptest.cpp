@@ -1,3 +1,5 @@
+// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
  * Copyright (c) 2001-2010, International Business Machines Corporation and
@@ -69,7 +71,7 @@ public:
         this->styles = s;
     }
 
-    virtual Replaceable *clone() const {
+    virtual TestReplaceable *clone() const {
         return new TestReplaceable(chars, styles);
     }
 
@@ -287,7 +289,7 @@ void ReplaceableTest::check(const UnicodeString& transliteratorName,
                                             pe, status);
 
         // test clone()
-        TestReplaceable *tr2 = (TestReplaceable *)tr->clone();
+        TestReplaceable *tr2 = tr->clone();
         if(tr2 != NULL) {
             delete tr;
             tr = tr2;

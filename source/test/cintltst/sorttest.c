@@ -1,3 +1,5 @@
+// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 *******************************************************************************
 *
@@ -6,7 +8,7 @@
 *
 *******************************************************************************
 *   file name:  sorttest.c
-*   encoding:   US-ASCII
+*   encoding:   UTF-8
 *   tab size:   8 (not used)
 *   indentation:4
 *
@@ -26,7 +28,7 @@
 #include "uarrsort.h"
 
 static void
-SortTest() {
+SortTest(void) {
     uint16_t small[]={ 8, 1, 2, 5, 4, 3, 7, 6 };
     int32_t medium[]={ 10, 8, 1, 2, 5, 5, -1, 6, 4, 3, 9, 7, 5 };
     uint32_t large[]={ 21, 10, 20, 19, 11, 12, 13, 10, 10, 10, 10,
@@ -51,7 +53,7 @@ SortTest() {
 
     /* for medium, add bits that will not be compared, to test stability */
     for(i=0; i<UPRV_LENGTHOF(medium); ++i) {
-        medium[i]=(medium[i]<<4)|i;
+        medium[i]=(int32_t)((uint32_t)medium[i]<<4) | i;
     }
 
     /* sort medium array (stable) */
@@ -107,6 +109,7 @@ typedef struct Line {
 
 static void
 printLines(const Line *lines) {
+    (void)lines; // suppress compiler warnings about unused variable
 #if 0
     int32_t i, j;
     for(i=0; i<NUM_LINES; ++i) {
@@ -129,7 +132,7 @@ linesComparator(const void *context, const void *left, const void *right) {
     return ucol_strcoll(coll, leftLine->s, STR_LEN, rightLine->s, STR_LEN);
 }
 
-static void StableSortTest() {
+static void StableSortTest(void) {
     UErrorCode errorCode=U_ZERO_ERROR;
     UCollator *coll;
     Line *lines, *p;

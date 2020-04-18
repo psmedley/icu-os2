@@ -1,4 +1,6 @@
-﻿// Copyright (c) 2007-2015 International Business Machines
+﻿// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
+// Copyright (c) 2007-2015 International Business Machines
 // Corporation and others. All Rights Reserved.
 format:table(nofallback) {
     Info {
@@ -155,7 +157,7 @@ format:table(nofallback) {
                     "GMT",
                     "DATE=RELATIVE_LONG,TIME=MEDIUM",
                     "ERA=1,YEAR=2012,MONTH=OCTOBER,DATE=8,HOUR_OF_DAY=23,MINUTE=59,SECOND=0",
-                    "23:59:00 Ngày 08 tháng 10 năm 2012"
+                    "23:59:00 8 tháng 10, 2012"
                },
                {
                     "vi@calendar=gregorian",         
@@ -185,21 +187,21 @@ format:table(nofallback) {
                     "",
                     "DATE=RELATIVE_SHORT",
                     "RELATIVE_ADD:DATE=1", // one day from now
-                    "Għada"
+                    "għada"
                },
                {
                     "mt_MT@calendar=gregorian",         
                     "",
                     "DATE=RELATIVE_SHORT",
                     "RELATIVE_MILLIS=0", // today
-                    "Illum"
+                    "illum"
                },
                {
                     "mt_MT@calendar=gregorian",         
                     "",
                     "DATE=RELATIVE_SHORT",
                     "RELATIVE_ADD:DATE=-1", // one day before now
-                    "Ilbieraħ"
+                    "lbieraħ"
                },
                {
                     "ru",
@@ -487,41 +489,41 @@ format:table(nofallback) {
                },
 
 				// Japanese
-               {
-                    "en_US@calendar=japanese",         
-                    "",
-                    "PATTERN=G y",
-                    "YEAR=8",
-                    "Heisei 8"
-               },
-               {
-                    "en_US@calendar=japanese",         
-                    "",
-                    "PATTERN=G yy",
-                    "YEAR=8",
-                    "Heisei 08"
-               },
-               {
-                    "en_US@calendar=japanese",         
-                    "",
-                    "PATTERN=G yyy",
-                    "YEAR=8",
-                    "Heisei 008"
-               },
-               {
-                    "en_US@calendar=japanese",         
-                    "",
-                    "PATTERN=G yyyy",
-                    "YEAR=8",
-                    "Heisei 0008"
-               },
-               {
-                    "en_US@calendar=japanese",         
-                    "",
-                    "PATTERN=G yyyyy",
-                    "YEAR=8",
-                    "Heisei 00008"
-               },
+//               {
+//                    "en_US@calendar=japanese",         
+//                    "",
+//                    "PATTERN=G y",
+//                    "YEAR=8",
+//                    "Heisei 8"
+//               },
+//               {
+//                    "en_US@calendar=japanese",         
+//                    "",
+//                    "PATTERN=G yy",
+//                    "YEAR=8",
+//                    "Heisei 08"
+//               },
+//               {
+//                    "en_US@calendar=japanese",         
+//                    "",
+//                    "PATTERN=G yyy",
+//                    "YEAR=8",
+//                    "Heisei 008"
+//               },
+//               {
+//                    "en_US@calendar=japanese",         
+//                    "",
+//                    "PATTERN=G yyyy",
+//                    "YEAR=8",
+//                    "Heisei 0008"
+//               },
+//               {
+//                    "en_US@calendar=japanese",         
+//                    "",
+//                    "PATTERN=G yyyyy",
+//                    "YEAR=8",
+//                    "Heisei 00008"
+//               },
 
             }
         }

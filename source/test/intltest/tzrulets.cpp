@@ -1,7 +1,9 @@
+// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 *******************************************************************************
-* Copyright (C) 2007-2014, International Business Machines Corporation and    *
-* others. All Rights Reserved.                                                *
+* Copyright (C) 2007-2016, International Business Machines Corporation and
+* others. All Rights Reserved.
 *******************************************************************************
 */
 
@@ -16,6 +18,7 @@
 #include "unicode/tzrule.h"
 #include "unicode/calendar.h"
 #include "unicode/gregocal.h"
+#include "unicode/strenum.h"
 #include "unicode/ucal.h"
 #include "unicode/unistr.h"
 #include "unicode/ustring.h"
@@ -84,7 +87,7 @@ TestZIDEnumeration::TestZIDEnumeration(UBool all)
         len = tzenum->count(status);
     } else {
         tzenum = NULL;
-        len = (int32_t)sizeof(TESTZIDS)/sizeof(TESTZIDS[0]);
+        len = UPRV_LENGTHOF(TESTZIDS);
     }
 }
 
@@ -263,7 +266,7 @@ TimeZoneRuleTest::TestSimpleRuleBasedTimeZone(void) {
     if (rbtz1->hasSameRules(*rbtz3)) {
         errln("FAIL: rbtz1 and rbtz3 have different rules, but returned true.");
     }
-    RuleBasedTimeZone *rbtz1c = (RuleBasedTimeZone*)rbtz1->clone();
+    RuleBasedTimeZone *rbtz1c = rbtz1->clone();
     if (!rbtz1->hasSameRules(*rbtz1c)) {
         errln("FAIL: Cloned RuleBasedTimeZone must have the same rules with the original.");
     }
@@ -545,7 +548,7 @@ TimeZoneRuleTest::TestHistoricalRuleBasedTimeZone(void) {
     if (ny->hasSameRules(*rbtz) || rbtz->hasSameRules(*ny)) {
         errln("FAIL: hasSameRules must return false");
     }
-    RuleBasedTimeZone *rbtzc = (RuleBasedTimeZone*)rbtz->clone();
+    RuleBasedTimeZone *rbtzc = rbtz->clone();
     if (!rbtz->hasSameRules(*rbtzc) || !rbtz->hasEquivalentTransitions(*rbtzc, jan1_1950, jan1_2010, TRUE, status)) {
         errln("FAIL: hasSameRules/hasEquivalentTransitions must return true for cloned RBTZs");
     }
@@ -739,7 +742,7 @@ TimeZoneRuleTest::TestHasEquivalentTransitions(void) {
     }
 
     // Cloned TimeZone
-    BasicTimeZone *newyork2 = (BasicTimeZone*)newyork->clone();
+    BasicTimeZone *newyork2 = newyork->clone();
     if (!newyork->hasEquivalentTransitions(*newyork2, jan1_1971, jan1_2011, FALSE, status)) {
         errln("FAIL: Cloned TimeZone must have the same transitions");
     }
@@ -1111,7 +1114,7 @@ TimeZoneRuleTest::TestGetSimpleRules(void) {
         getUTCMillis(2005, UCAL_JULY, 1),
         getUTCMillis(2010, UCAL_NOVEMBER, 1),        
     };
-    int32_t numTimes = sizeof(testTimes)/sizeof(UDate);
+    int32_t numTimes = UPRV_LENGTHOF(testTimes);
     UErrorCode status = U_ZERO_ERROR;
     TestZIDEnumeration tzenum(!quick);
     InitialTimeZoneRule *initial;
@@ -1692,7 +1695,7 @@ TimeZoneRuleTest::TestVTimeZoneCoverage(void) {
 
     // setRawOffset
     const int32_t RAW = -10*HOUR;
-    VTimeZone *tmpvtz = (VTimeZone*)vtz->clone();
+    VTimeZone *tmpvtz = vtz->clone();
     tmpvtz->setRawOffset(RAW);
     if (tmpvtz->getRawOffset() != RAW) {
         logln("setRawOffset is implemented in VTimeZone");
@@ -2104,7 +2107,7 @@ TimeZoneRuleTest::TestT6216(void) {
     int32_t i, j;
 
     // Get test times
-    UDate times[sizeof(TestDates) / (3 * sizeof(int32_t))];
+    UDate times[UPRV_LENGTHOF(TestDates)];
     int32_t numTimes;
 
     UErrorCode status = U_ZERO_ERROR;

@@ -1,3 +1,5 @@
+// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
  * Copyright (c) 1997-2014, International Business Machines Corporation and
@@ -164,6 +166,7 @@ void Test4056591()
     if(U_FAILURE(status))
     {
         log_data_err("FAIL: error in creating the dateformat using u_openPattern(): %s - (Are you missing data?)\n", myErrorName(status));
+        ucal_close(cal);
         return;
     }
     start = 1800;

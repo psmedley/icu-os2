@@ -1,6 +1,8 @@
+// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT:
- * Copyright (c) 1997-2014, International Business Machines Corporation and
+ * Copyright (c) 1997-2016, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 /********************************************************************************
@@ -26,6 +28,7 @@
 #include "unicode/uloc.h"
 #include "unicode/uchar.h"
 #include "unicode/ustring.h"
+#include "unicode/utf16.h"
 #include "unicode/putil.h"
 #include "callcoll.h"
 #include "cmemory.h"
@@ -1073,7 +1076,7 @@ static void TestDiscontiguos() {
         log_verbose("count %d\n", count);
 
         for (;;) {
-            uint32_t  ce;
+            int32_t  ce;
             UChar    *e = u_strchr(s, 0x20);
             if (e == 0) {
                 e = u_strchr(s, 0);
@@ -1085,7 +1088,7 @@ static void TestDiscontiguos() {
                 return;
             }
             while (ce != UCOL_NULLORDER) {
-                if (ce != (uint32_t)ucol_next(iter, &status) ||
+                if (ce != ucol_next(iter, &status) ||
                     U_FAILURE(status)) {
                     log_err("Discontiguos contraction test mismatch\n");
                     return;
@@ -1134,7 +1137,7 @@ static const UChar tsceText[] = {   /* Nothing in here should be ignorable */
     0x0020, 0x1E4D,                 /* small letter o with tilde and acute, decomposes */
     0x0020
 };
-enum { kLen_tsceText = sizeof(tsceText)/sizeof(tsceText[0]) };
+enum { kLen_tsceText = UPRV_LENGTHOF(tsceText) };
 
 static const int32_t rootStandardOffsets[] = {
     0,  1,2,
@@ -1150,7 +1153,7 @@ static const int32_t rootStandardOffsets[] = {
     28,
     29
 };
-enum { kLen_rootStandardOffsets = sizeof(rootStandardOffsets)/sizeof(rootStandardOffsets[0]) };
+enum { kLen_rootStandardOffsets = UPRV_LENGTHOF(rootStandardOffsets) };
 
 static const int32_t rootSearchOffsets[] = {
     0,  1,2,
@@ -1166,7 +1169,7 @@ static const int32_t rootSearchOffsets[] = {
     28,
     29
 };
-enum { kLen_rootSearchOffsets = sizeof(rootSearchOffsets)/sizeof(rootSearchOffsets[0]) };
+enum { kLen_rootSearchOffsets = UPRV_LENGTHOF(rootSearchOffsets) };
 
 typedef struct {
     const char *    locale;

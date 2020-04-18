@@ -1,12 +1,14 @@
+// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 *******************************************************************************
 *
-*   Copyright (C) 2002-2015, International Business Machines
+*   Copyright (C) 2002-2016, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 *******************************************************************************
 *   file name:  uenumtst.c
-*   encoding:   US-ASCII
+*   encoding:   UTF-8
 *   tab size:   8 (not used)
 *   indentation:2
 *
@@ -57,11 +59,13 @@ chArrayClose(UEnumeration *en) {
 
 static int32_t U_CALLCONV
 chArrayCount(UEnumeration *en, UErrorCode *status) {
+    (void)status; // suppress compiler warnings about unused variable
     return cont->maxIndex;
 }
 
 static const UChar* U_CALLCONV 
 chArrayUNext(UEnumeration *en, int32_t *resultLength, UErrorCode *status) {
+    (void)status; // suppress compiler warnings about unused variable
     if(cont->currIndex >= cont->maxIndex) {
         return NULL;
     }
@@ -79,6 +83,7 @@ chArrayUNext(UEnumeration *en, int32_t *resultLength, UErrorCode *status) {
 
 static const char* U_CALLCONV
 chArrayNext(UEnumeration *en, int32_t *resultLength, UErrorCode *status) {
+    (void)status; // suppress compiler warnings about unused variable
     if(cont->currIndex >= cont->maxIndex) {
         return NULL;
     }
@@ -91,6 +96,7 @@ chArrayNext(UEnumeration *en, int32_t *resultLength, UErrorCode *status) {
 
 static void U_CALLCONV
 chArrayReset(UEnumeration *en, UErrorCode *status) {
+    (void)status; // suppress compiler warnings about unused variable
     cont->currIndex = 0;
 }
 
@@ -158,11 +164,13 @@ uchArrayClose(UEnumeration *en) {
 
 static int32_t U_CALLCONV
 uchArrayCount(UEnumeration *en, UErrorCode *status) {
+    (void)status; // suppress compiler warnings about unused variable
     return ucont->maxIndex;
 }
 
 static const UChar* U_CALLCONV
 uchArrayUNext(UEnumeration *en, int32_t *resultLength, UErrorCode *status) {
+    (void)status; // suppress compiler warnings about unused variable
     if(ucont->currIndex >= ucont->maxIndex) {
         return NULL;
     }
@@ -175,6 +183,7 @@ uchArrayUNext(UEnumeration *en, int32_t *resultLength, UErrorCode *status) {
 
 static void U_CALLCONV
 uchArrayReset(UEnumeration *en, UErrorCode *status) {
+    (void)status; // suppress compiler warnings about unused variable
     ucont->currIndex = 0;
 }
 
@@ -206,7 +215,7 @@ static UEnumeration *getchArrayEnum(const char** source, int32_t size) {
 static void EnumerationTest(void) {
     UErrorCode status = U_ZERO_ERROR;
     int32_t len = 0;
-    UEnumeration *en = getchArrayEnum(test1, sizeof(test1)/sizeof(test1[0]));
+    UEnumeration *en = getchArrayEnum(test1, UPRV_LENGTHOF(test1));
     const char *string = NULL;
     const UChar *uString = NULL;
     while ((string = uenum_next(en, &len, &status))) {
@@ -277,7 +286,7 @@ static UEnumeration *getuchArrayEnum(const UChar** source, int32_t size) {
 static void DefaultNextTest(void) {
     UErrorCode status = U_ZERO_ERROR;
     int32_t len = 0;
-    UEnumeration *en = getuchArrayEnum(test2, sizeof(test2)/sizeof(test2[0]));
+    UEnumeration *en = getuchArrayEnum(test2, UPRV_LENGTHOF(test2));
     const char *string = NULL;
     const UChar *uString = NULL;
     while ((uString = uenum_unext(en, &len, &status))) {
@@ -341,7 +350,7 @@ static void verifyEnumeration(int line, UEnumeration *u, const char * const * co
         log_verbose("%s:%d: OK: string #%d got '%s'\n", __FILE__, line, i, c);
       }
       
-      if(len!=strlen(compareToChar[i])) {
+      if(len!=(int32_t)strlen(compareToChar[i])) {
         log_err("%s:%d: FAIL: string #%d expected len %d got %d\n", __FILE__, line, i, strlen(compareToChar[i]), len);
       } else {
         log_verbose("%s:%d: OK: string #%d got len %d\n", __FILE__, line, i, len);
@@ -367,7 +376,7 @@ static void verifyEnumeration(int line, UEnumeration *u, const char * const * co
       return;
     }
     if(compareToChar!=NULL) {
-      u_charsToUChars(compareToChar[i], buf, strlen(compareToChar[i])+1);
+      u_charsToUChars(compareToChar[i], buf, (int32_t)strlen(compareToChar[i])+1);
       if(u_strncmp(ustr,buf,len)) {
         int j;
         log_err("%s:%d: FAIL: ustring #%d expected '%s' got '%s'\n", __FILE__, line, i, compareToChar[i], austrdup(ustr));
@@ -378,7 +387,7 @@ static void verifyEnumeration(int line, UEnumeration *u, const char * const * co
         log_verbose("%s:%d: OK: ustring #%d got '%s'\n", __FILE__, line, i, compareToChar[i]);
       }
       
-      if(len!=strlen(compareToChar[i])) {
+      if(len!=(int32_t)strlen(compareToChar[i])) {
         log_err("%s:%d: FAIL: ustring #%d expected len %d got %d\n", __FILE__, line, i, strlen(compareToChar[i]), len);
       } else {
         log_verbose("%s:%d: OK: ustring #%d got len %d\n", __FILE__, line, i, len);

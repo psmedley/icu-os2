@@ -1,3 +1,5 @@
+// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT:
  * Copyright (c) 1997-2014, International Business Machines Corporation and
@@ -34,7 +36,8 @@ static  void TestDisplayNames(void);
 /**
  * Test getAvailableLocales
  **/
- static  void TestGetAvailableLocales(void);
+static void TestGetAvailableLocales(void);
+static void TestGetAvailableLocalesByType(void);
 /**
  * Test functions to set and access a custom data directory
  **/
@@ -82,6 +85,7 @@ static  void TestDisplayNames(void);
  static void doTestDisplayNames(const char* inLocale, int32_t compareIndex);
 
  static void TestCanonicalization(void);
+ static void TestCanonicalizationBuffer(void);
 
  static void TestDisplayKeywords(void);
 
@@ -118,15 +122,18 @@ static void TestOrientation(void);
 static void TestLikelySubtags(void);
 
 /**
- * lanuage tag
+ * language tag
  */
 static void TestForLanguageTag(void);
 static void TestToLanguageTag(void);
+static void TestBug20132(void);
+static void TestLangAndRegionCanonicalize(void);
 
 static void TestToUnicodeLocaleKey(void);
 static void TestToLegacyKey(void);
 static void TestToUnicodeLocaleType(void);
 static void TestToLegacyType(void);
+static void TestBug20149(void);
 
 /**
  * locale data

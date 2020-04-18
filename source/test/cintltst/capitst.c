@@ -1,5 +1,7 @@
+// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
- * Copyright (c) 1997-2014, International Business Machines
+ * Copyright (c) 1997-2016, International Business Machines
  * Corporation and others. All Rights Reserved.
  ********************************************************************/
 /*****************************************************************************
@@ -40,6 +42,7 @@ static void TestBengaliSortKey(void);
 
 
 static char* U_EXPORT2 ucol_sortKeyToString(const UCollator *coll, const uint8_t *sortkey, char *buffer, uint32_t len) {
+    (void)coll; // suppress compiler warnings about unused variable
     uint32_t position = 0;
     uint8_t b;
 
@@ -115,7 +118,7 @@ void TestGetSetAttr(void) {
     log_err_status(status, "Unable to open collator. %s\n", u_errorName(status));
     return;
   } 
-  for(i = 0; i<sizeof(attrs)/sizeof(attrs[0]); i++) {
+  for(i = 0; i<UPRV_LENGTHOF(attrs); i++) {
     currAttr = attrs[i].att;
     ucol_setAttribute(coll, currAttr, UCOL_DEFAULT, &status);
     if(U_FAILURE(status)) {
@@ -528,8 +531,8 @@ void TestRuleBasedColl()
     }
     while (TRUE) {
         /* testing with en since thai has its own tailoring */
-        uint32_t ce = ucol_next(iter1, &status);
-        uint32_t ce2 = ucol_next(iter2, &status);
+        int32_t ce = ucol_next(iter1, &status);
+        int32_t ce2 = ucol_next(iter2, &status);
         if(U_FAILURE(status)) {
             log_err("ERROR: CollationElement iterator creation failed.: %s\n", myErrorName(status));
             return;
@@ -846,7 +849,7 @@ void TestCloneBinary(){
         ucol_getSortKey(col, t, -1, k2, l2);
         if (strcmp((char *)k1,(char *)k2) != 0){
             log_err("ucol_openBinary - new collator should equal to old one\n");
-        };
+        }
         free(k1);
         free(k2);
     }
@@ -870,9 +873,9 @@ static void TestBengaliSortKey(void)
   int32_t sortKeyLen2 = 0;
   UErrorCode status = U_ZERO_ERROR;
   char sortKeyStr1[2048];
-  uint32_t sortKeyStrLen1 = sizeof(sortKeyStr1)/sizeof(sortKeyStr1[0]);
+  uint32_t sortKeyStrLen1 = UPRV_LENGTHOF(sortKeyStr1);
   char sortKeyStr2[2048];
-  uint32_t sortKeyStrLen2 = sizeof(sortKeyStr2)/sizeof(sortKeyStr2[0]);
+  uint32_t sortKeyStrLen2 = UPRV_LENGTHOF(sortKeyStr2);
   UCollationResult result;
 
   static UChar preRules[41] = { 0x26, 0x9fa, 0x3c, 0x98c, 0x3c, 0x9e1, 0x3c, 0x98f, 0x3c, 0x990, 0x3c, 0x993, 0x3c, 0x994, 0x3c, 0x9bc, 0x3c, 0x982, 0x3c, 0x983, 0x3c, 0x981, 0x3c, 0x9b0, 0x3c, 0x9b8, 0x3c, 0x9b9, 0x3c, 0x9bd, 0x3c, 0x9be, 0x3c, 0x9bf, 0x3c, 0x9c8, 0x3c, 0x9cb, 0x3d, 0x9cb , 0};
@@ -938,8 +941,8 @@ void TestOpenVsOpenRules(){
     int32_t sortKeyLen1, sortKeyLen2;
     uint8_t *sortKey1 = NULL, *sortKey2 = NULL;
     char sortKeyStr1[512], sortKeyStr2[512];
-    uint32_t sortKeyStrLen1 = sizeof(sortKeyStr1) / sizeof(sortKeyStr1[0]),
-             sortKeyStrLen2 = sizeof(sortKeyStr2) / sizeof(sortKeyStr2[0]);
+    uint32_t sortKeyStrLen1 = UPRV_LENGTHOF(sortKeyStr1),
+             sortKeyStrLen2 = UPRV_LENGTHOF(sortKeyStr2);
     ULocaleData *uld;
     int32_t x, y, z;
     USet *eSet;
@@ -1073,7 +1076,7 @@ void TestSortKey()
     UChar *test1, *test2, *test3;
     UErrorCode status = U_ZERO_ERROR;
     char toStringBuffer[256], *resultP;
-    uint32_t toStringLen=sizeof(toStringBuffer)/sizeof(toStringBuffer[0]);
+    uint32_t toStringLen=UPRV_LENGTHOF(toStringBuffer);
 
 
     uint8_t s1[] = { 0x9f, 0x00 };
@@ -1417,7 +1420,7 @@ void TestGetLocale() {
   };
 
   /* test opening collators for different locales */
-  for(i = 0; i<sizeof(testStruct)/sizeof(testStruct[0]); i++) {
+  for(i = 0; i<UPRV_LENGTHOF(testStruct); i++) {
     status = U_ZERO_ERROR;
     coll = ucol_open(testStruct[i].requestedLocale, &status);
     if(U_FAILURE(status)) {
@@ -1542,70 +1545,70 @@ void TestBounds() {
     };
 
     struct teststruct tests[] = {
-        {"\\u010CAKI MIHALJ" } ,
-        {"\\u010CAKI MIHALJ" } ,
-        {"\\u010CAKI PIRO\\u0160KA" },
-        {"\\u010CABAI ANDRIJA" } ,
-        {"\\u010CABAI LAJO\\u0160" } ,
-        {"\\u010CABAI MARIJA" } ,
-        {"\\u010CABAI STEVAN" } ,
-        {"\\u010CABAI STEVAN" } ,
-        {"\\u010CABARKAPA BRANKO" } ,
-        {"\\u010CABARKAPA MILENKO" } ,
-        {"\\u010CABARKAPA MIROSLAV" } ,
-        {"\\u010CABARKAPA SIMO" } ,
-        {"\\u010CABARKAPA STANKO" } ,
-        {"\\u010CABARKAPA TAMARA" } ,
-        {"\\u010CABARKAPA TOMA\\u0160" } ,
-        {"\\u010CABDARI\\u0106 NIKOLA" } ,
-        {"\\u010CABDARI\\u0106 ZORICA" } ,
-        {"\\u010CABI NANDOR" } ,
-        {"\\u010CABOVI\\u0106 MILAN" } ,
-        {"\\u010CABRADI AGNEZIJA" } ,
-        {"\\u010CABRADI IVAN" } ,
-        {"\\u010CABRADI JELENA" } ,
-        {"\\u010CABRADI LJUBICA" } ,
-        {"\\u010CABRADI STEVAN" } ,
-        {"\\u010CABRDA MARTIN" } ,
-        {"\\u010CABRILO BOGDAN" } ,
-        {"\\u010CABRILO BRANISLAV" } ,
-        {"\\u010CABRILO LAZAR" } ,
-        {"\\u010CABRILO LJUBICA" } ,
-        {"\\u010CABRILO SPASOJA" } ,
-        {"\\u010CADE\\u0160 ZDENKA" } ,
-        {"\\u010CADESKI BLAGOJE" } ,
-        {"\\u010CADOVSKI VLADIMIR" } ,
-        {"\\u010CAGLJEVI\\u0106 TOMA" } ,
-        {"\\u010CAGOROVI\\u0106 VLADIMIR" } ,
-        {"\\u010CAJA VANKA" } ,
-        {"\\u010CAJI\\u0106 BOGOLJUB" } ,
-        {"\\u010CAJI\\u0106 BORISLAV" } ,
-        {"\\u010CAJI\\u0106 RADOSLAV" } ,
-        {"\\u010CAK\\u0160IRAN MILADIN" } ,
-        {"\\u010CAKAN EUGEN" } ,
-        {"\\u010CAKAN EVGENIJE" } ,
-        {"\\u010CAKAN IVAN" } ,
-        {"\\u010CAKAN JULIJAN" } ,
-        {"\\u010CAKAN MIHAJLO" } ,
-        {"\\u010CAKAN STEVAN" } ,
-        {"\\u010CAKAN VLADIMIR" } ,
-        {"\\u010CAKAN VLADIMIR" } ,
-        {"\\u010CAKAN VLADIMIR" } ,
-        {"\\u010CAKARA ANA" } ,
-        {"\\u010CAKAREVI\\u0106 MOMIR" } ,
-        {"\\u010CAKAREVI\\u0106 NEDELJKO" } ,
-        {"\\u010CAKI \\u0160ANDOR" } ,
-        {"\\u010CAKI AMALIJA" } ,
-        {"\\u010CAKI ANDRA\\u0160" } ,
-        {"\\u010CAKI LADISLAV" } ,
-        {"\\u010CAKI LAJO\\u0160" } ,
-        {"\\u010CAKI LASLO" } ,
+        {"\\u010CAKI MIHALJ", {0}},
+        {"\\u010CAKI MIHALJ", {0}},
+        {"\\u010CAKI PIRO\\u0160KA", {0}},
+        {"\\u010CABAI ANDRIJA", {0}},
+        {"\\u010CABAI LAJO\\u0160", {0}},
+        {"\\u010CABAI MARIJA", {0}},
+        {"\\u010CABAI STEVAN", {0}},
+        {"\\u010CABAI STEVAN", {0}},
+        {"\\u010CABARKAPA BRANKO", {0}},
+        {"\\u010CABARKAPA MILENKO", {0}},
+        {"\\u010CABARKAPA MIROSLAV", {0}},
+        {"\\u010CABARKAPA SIMO", {0}},
+        {"\\u010CABARKAPA STANKO", {0}},
+        {"\\u010CABARKAPA TAMARA", {0}},
+        {"\\u010CABARKAPA TOMA\\u0160", {0}},
+        {"\\u010CABDARI\\u0106 NIKOLA", {0}},
+        {"\\u010CABDARI\\u0106 ZORICA", {0}},
+        {"\\u010CABI NANDOR", {0}},
+        {"\\u010CABOVI\\u0106 MILAN", {0}},
+        {"\\u010CABRADI AGNEZIJA", {0}},
+        {"\\u010CABRADI IVAN", {0}},
+        {"\\u010CABRADI JELENA", {0}},
+        {"\\u010CABRADI LJUBICA", {0}},
+        {"\\u010CABRADI STEVAN", {0}},
+        {"\\u010CABRDA MARTIN", {0}},
+        {"\\u010CABRILO BOGDAN", {0}},
+        {"\\u010CABRILO BRANISLAV", {0}},
+        {"\\u010CABRILO LAZAR", {0}},
+        {"\\u010CABRILO LJUBICA", {0}},
+        {"\\u010CABRILO SPASOJA", {0}},
+        {"\\u010CADE\\u0160 ZDENKA", {0}},
+        {"\\u010CADESKI BLAGOJE", {0}},
+        {"\\u010CADOVSKI VLADIMIR", {0}},
+        {"\\u010CAGLJEVI\\u0106 TOMA", {0}},
+        {"\\u010CAGOROVI\\u0106 VLADIMIR", {0}},
+        {"\\u010CAJA VANKA", {0}},
+        {"\\u010CAJI\\u0106 BOGOLJUB", {0}},
+        {"\\u010CAJI\\u0106 BORISLAV", {0}},
+        {"\\u010CAJI\\u0106 RADOSLAV", {0}},
+        {"\\u010CAK\\u0160IRAN MILADIN", {0}},
+        {"\\u010CAKAN EUGEN", {0}},
+        {"\\u010CAKAN EVGENIJE", {0}},
+        {"\\u010CAKAN IVAN", {0}},
+        {"\\u010CAKAN JULIJAN", {0}},
+        {"\\u010CAKAN MIHAJLO", {0}},
+        {"\\u010CAKAN STEVAN", {0}},
+        {"\\u010CAKAN VLADIMIR", {0}},
+        {"\\u010CAKAN VLADIMIR", {0}},
+        {"\\u010CAKAN VLADIMIR", {0}},
+        {"\\u010CAKARA ANA", {0}},
+        {"\\u010CAKAREVI\\u0106 MOMIR", {0}},
+        {"\\u010CAKAREVI\\u0106 NEDELJKO", {0}},
+        {"\\u010CAKI \\u0160ANDOR", {0}},
+        {"\\u010CAKI AMALIJA", {0}},
+        {"\\u010CAKI ANDRA\\u0160", {0}},
+        {"\\u010CAKI LADISLAV", {0}},
+        {"\\u010CAKI LAJO\\u0160", {0}},
+        {"\\u010CAKI LASLO", {0}},
     };
 
 
 
     int32_t i = 0, j = 0, k = 0, buffSize = 0, skSize = 0, lowerSize = 0, upperSize = 0;
-    int32_t arraySize = sizeof(tests)/sizeof(tests[0]);
+    int32_t arraySize = UPRV_LENGTHOF(tests);
 
     if(U_SUCCESS(status) && coll) {
         for(i = 0; i<arraySize; i++) {
@@ -1656,12 +1659,12 @@ void TestBounds() {
 
 
 
-        for(i = 0; i<sizeof(test)/sizeof(test[0]); i++) {
+        for(i = 0; i<UPRV_LENGTHOF(test); i++) {
             buffSize = u_unescape(test[i], buffer, 512);
             skSize = ucol_getSortKey(coll, buffer, buffSize, sortkey, 512);
             lowerSize = ucol_getBound(sortkey, skSize, UCOL_BOUND_LOWER, 1, lower, 512, &status);
             upperSize = ucol_getBound(sortkey, skSize, UCOL_BOUND_UPPER_LONG, 1, upper, 512, &status);
-            for(j = i+1; j<sizeof(test)/sizeof(test[0]); j++) {
+            for(j = i+1; j<UPRV_LENGTHOF(test); j++) {
                 buffSize = u_unescape(test[j], buffer, 512);
                 skSize = ucol_getSortKey(coll, buffer, buffSize, sortkey, 512);
                 if(strcmp((const char *)lower, (const char *)sortkey) > 0) {
@@ -1904,7 +1907,7 @@ void TestMergeSortKeys(void) {
          "abcd",
          "abcde"
      };
-     uint32_t casesSize = sizeof(cases)/sizeof(cases[0]);
+     uint32_t casesSize = UPRV_LENGTHOF(cases);
      const char* prefix = "foo";
      const char* suffix = "egg";
      char outBuff1[256], outBuff2[256];
@@ -2045,7 +2048,11 @@ static void TestShortString(void)
         {"LDE_RDE_KPHONEBOOK_T0024_ZLATN","KPHONEBOOK_LDE", "de@collation=phonebook", U_USING_FALLBACK_WARNING, 0, 0 },
 
         {"LEN_RUS_NO_AS_S4","AS_LROOT_NO_S4", NULL, U_USING_DEFAULT_WARNING, 0, 0 },
-        {"LDE_VPHONEBOOK_EO_SI","EO_KPHONEBOOK_LDE_SI", "de@collation=phonebook", U_ZERO_ERROR, 0, 0 },
+        // uloc_canonicalize("de__PHONEBOOK") used to return "de@collation=phonebook"
+        // and we got U_ZERO_ERROR.
+        // Since ICU-20187 "drop support for long-obsolete locale ID variants..."
+        // we actually load the "de__PHONEBOOK" bundle and fall back to "de".
+        {"LDE_VPHONEBOOK_EO_SI","EO_KPHONEBOOK_LDE_SI", "de@collation=phonebook", U_USING_FALLBACK_WARNING, 0, 0 },
         {"LDE_Kphonebook","KPHONEBOOK_LDE", "de@collation=phonebook", U_ZERO_ERROR, 0, 0 },
         {"Xqde_DE@collation=phonebookq_S3_EX","KPHONEBOOK_LDE", "de@collation=phonebook", U_USING_FALLBACK_WARNING, 0, 0 },
         {"LFR_FO", "FO_LROOT", NULL, U_USING_DEFAULT_WARNING, 0, 0 },
@@ -2061,7 +2068,7 @@ static void TestShortString(void)
     const char* locale = NULL;
 
 
-    for(i = 0; i < sizeof(testCases)/sizeof(testCases[0]); i++) {
+    for(i = 0; i < UPRV_LENGTHOF(testCases); i++) {
         status = U_ZERO_ERROR;
         if(testCases[i].locale) {
             locale = testCases[i].locale;
@@ -2217,7 +2224,7 @@ TestGetContractionsAndUnsafes(void)
     UChar buffer[65536];
     int32_t setLen = 0;
 
-    for(i = 0; i < sizeof(tests)/sizeof(tests[0]); i++) {
+    for(i = 0; i < UPRV_LENGTHOF(tests); i++) {
         log_verbose("Testing locale: %s\n", tests[i].locale);
         coll = ucol_open(tests[i].locale, &status);
         if (coll == NULL || U_FAILURE(status)) {
@@ -2332,11 +2339,11 @@ TestOpenBinary(void)
     }
 #endif
 
-    genericOrderingTest(coll, wUCA, sizeof(wUCA)/sizeof(wUCA[0]));
+    genericOrderingTest(coll, wUCA, UPRV_LENGTHOF(wUCA));
 
-    genericOrderingTest(cloneWUCA, wUCA, sizeof(wUCA)/sizeof(wUCA[0]));
+    genericOrderingTest(cloneWUCA, wUCA, UPRV_LENGTHOF(wUCA));
 #if OPEN_BINARY_ACCEPTS_NULL_BASE
-    genericOrderingTest(cloneNOUCA, noUCA, sizeof(noUCA)/sizeof(noUCA[0]));
+    genericOrderingTest(cloneNOUCA, noUCA, UPRV_LENGTHOF(noUCA));
 #endif
 
     if(image != imageBuffer) {
