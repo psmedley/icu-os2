@@ -1,6 +1,8 @@
+// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
  **********************************************************************
- *   Copyright (C) 2005-2014, International Business Machines
+ *   Copyright (C) 2005-2016, International Business Machines
  *   Corporation and others.  All Rights Reserved.
  **********************************************************************
  */
@@ -30,17 +32,26 @@
 
 char testId[100];
 
-#define TEST_ASSERT(x) {if (!(x)) { \
-    errln("Failure in file %s, line %d, test ID = \"%s\"", __FILE__, __LINE__, testId);}}
+#define TEST_ASSERT(x) UPRV_BLOCK_MACRO_BEGIN { \
+    if (!(x)) { \
+        errln("Failure in file %s, line %d, test ID = \"%s\"", __FILE__, __LINE__, testId); \
+    } \
+} UPRV_BLOCK_MACRO_END
 
-#define TEST_ASSERT_M(x, m) {if (!(x)) { \
-    dataerrln("Failure in file %s, line %d.   \"%s\"", __FILE__, __LINE__, m);return;}}
+#define TEST_ASSERT_M(x, m) UPRV_BLOCK_MACRO_BEGIN { \
+    if (!(x)) { \
+        dataerrln("Failure in file %s, line %d.   \"%s\"", __FILE__, __LINE__, m); \
+        return; \
+    } \
+} UPRV_BLOCK_MACRO_END
 
-#define TEST_ASSERT_SUCCESS(errcode) {if (U_FAILURE(errcode)) { \
-    dataerrln("Failure in file %s, line %d, test ID \"%s\", status = \"%s\"", \
-          __FILE__, __LINE__, testId, u_errorName(errcode));}}
+#define TEST_ASSERT_SUCCESS(errcode) UPRV_BLOCK_MACRO_BEGIN { \
+    if (U_FAILURE(errcode)) { \
+        dataerrln("Failure in file %s, line %d, test ID \"%s\", status = \"%s\"", \
+                  __FILE__, __LINE__, testId, u_errorName(errcode)); \
+    } \
+} UPRV_BLOCK_MACRO_END
 
-#define ARRAY_SIZE(array) (sizeof array / sizeof array[0])
 #define NEW_ARRAY(type, count) (type *) uprv_malloc((count) * sizeof(type))
 #define DELETE_ARRAY(array) uprv_free((void *) (array))
 
@@ -172,7 +183,7 @@ void SSearchTest::searchTest()
             //  This assert is a little deceiving in that strength can be
             //   any of the allowed values, not just TERTIARY, but it will
             //   do the job of getting the error output.
-            TEST_ASSERT(*strength=="TERTIARY")
+            TEST_ASSERT(*strength=="TERTIARY");
         }
 
         //
@@ -200,7 +211,7 @@ void SSearchTest::searchTest()
         const UnicodeString *locale   = testCase->getAttribute("locale");
         if (locale == NULL || locale->length()==0) {
             locale = &defLocale;
-        };
+        }
         locale->extract(0, locale->length(), clocale, sizeof(clocale), NULL);
 
 
@@ -368,12 +379,10 @@ OrderList::OrderList(UCollator *coll, const UnicodeString &string, int32_t strin
     {
     default:
         strengthMask |= UCOL_TERTIARYORDERMASK;
-        /* fall through */
-
+        U_FALLTHROUGH;
     case UCOL_SECONDARY:
         strengthMask |= UCOL_SECONDARYORDERMASK;
-        /* fall through */
-
+        U_FALLTHROUGH;
     case UCOL_PRIMARY:
         strengthMask |= UCOL_PRIMARYORDERMASK;
     }
@@ -615,7 +624,7 @@ void SSearchTest::offsetTest()
         "pe\\u0302che",
     };
 
-    int32_t testCount = ARRAY_SIZE(test);
+    int32_t testCount = UPRV_LENGTHOF(test);
     UErrorCode status = U_ZERO_ERROR;
     RuleBasedCollator *col = (RuleBasedCollator *) Collator::createInstance(Locale::getEnglish(), status);
     if (U_FAILURE(status)) {
@@ -749,7 +758,7 @@ void SSearchTest::sharpSTest()
                                                            &status));
     TEST_ASSERT_SUCCESS(status);
 
-    for (uint32_t t = 0; t < (sizeof(targets)/sizeof(targets[0])); t += 1) {
+    for (uint32_t t = 0; t < UPRV_LENGTHOF(targets); t += 1) {
         UBool bFound;
         UnicodeString target = targets[t].unescape();
 
@@ -1393,12 +1402,12 @@ void SSearchTest::monkeyTest(char *params)
         &expansionMonkey,
         &contractionMonkey,
         &expansionMonkey};
-    int32_t monkeyCount = sizeof(monkeys) / sizeof(monkeys[0]);
+    int32_t monkeyCount = UPRV_LENGTHOF(monkeys);
     // int32_t nonMatchCount = 0;
 
     UCollationStrength strengths[] = {UCOL_PRIMARY, UCOL_SECONDARY, UCOL_TERTIARY};
     const char *strengthNames[] = {"primary", "secondary", "tertiary"};
-    int32_t strengthCount = sizeof(strengths) / sizeof(strengths[0]);
+    int32_t strengthCount = UPRV_LENGTHOF(strengths);
     int32_t loopCount = quick? 1000 : 10000;
     int32_t firstStrength = 0;
     int32_t lastStrength  = strengthCount - 1; //*/ 0;

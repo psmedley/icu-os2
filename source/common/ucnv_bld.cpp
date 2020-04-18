@@ -1,7 +1,9 @@
+// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
  ********************************************************************
  * COPYRIGHT:
- * Copyright (c) 1996-2015, International Business Machines Corporation and
+ * Copyright (c) 1996-2016, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************
  *
@@ -192,9 +194,9 @@ static struct {
 
 /*initializes some global variables */
 static UHashtable *SHARED_DATA_HASHTABLE = NULL;
-static UMutex cnvCacheMutex = U_MUTEX_INITIALIZER;  /* Mutex for synchronizing cnv cache access. */
-                                                    /*  Note:  the global mutex is used for      */
-                                                    /*         reference count updates.          */
+static icu::UMutex cnvCacheMutex;
+/*  Note:  the global mutex is used for      */
+/*         reference count updates.          */
 
 static const char **gAvailableConverters = NULL;
 static uint16_t gAvailableConverterCount = 0;
@@ -257,6 +259,11 @@ static UBool U_CALLCONV ucnv_cleanup(void) {
 #endif
 
     return (SHARED_DATA_HASHTABLE == NULL);
+}
+
+U_CAPI void U_EXPORT2
+ucnv_enableCleanup() {
+    ucln_common_registerCleanup(UCLN_COMMON_UCNV, ucnv_cleanup);
 }
 
 static UBool U_CALLCONV
@@ -385,7 +392,7 @@ getAlgorithmicTypeFromName(const char *realName)
 
     /* do a binary search for the alias */
     start = 0;
-    limit = sizeof(cnvNameType)/sizeof(cnvNameType[0]);
+    limit = UPRV_LENGTHOF(cnvNameType);
     mid = limit;
     lastMid = UINT32_MAX;
 
@@ -437,7 +444,7 @@ ucnv_shareConverterData(UConverterSharedData * data)
         SHARED_DATA_HASHTABLE = uhash_openSize(uhash_hashChars, uhash_compareChars, NULL,
                             ucnv_io_countKnownConverters(&err)*UCNV_CACHE_LOAD_FACTOR,
                             &err);
-        ucln_common_registerCleanup(UCLN_COMMON_UCNV, ucnv_cleanup);
+        ucnv_enableCleanup();
 
         if (U_FAILURE(err))
             return;
@@ -1097,7 +1104,7 @@ static void U_CALLCONV initAvailableConvertersList(UErrorCode &errCode) {
     U_ASSERT(gAvailableConverterCount == 0);
     U_ASSERT(gAvailableConverters == NULL);
 
-    ucln_common_registerCleanup(UCLN_COMMON_UCNV, ucnv_cleanup);
+    ucnv_enableCleanup();
     UEnumeration *allConvEnum = ucnv_openAllNames(&errCode);
     int32_t allConverterCount = uenum_count(allConvEnum, &errCode);
     if (U_FAILURE(errCode)) {
@@ -1203,7 +1210,7 @@ internalSetName(const char *name, UErrorCode *status) {
     //             -- Andy
     gDefaultConverterName = gDefaultConverterNameBuffer;
 
-    ucln_common_registerCleanup(UCLN_COMMON_UCNV, ucnv_cleanup);
+    ucnv_enableCleanup();
 
     umtx_unlock(&cnvCacheMutex);
 }

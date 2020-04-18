@@ -1,3 +1,5 @@
+// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
  ****************************************************************************
  * Copyright (c) 1997-2014, International Business Machines Corporation and *
@@ -50,7 +52,7 @@ static uint64_t randomInt64(void)
     }
 
     /* Assume rand has at least 12 bits of precision */
-    for (i = 0; i < sizeof(ran); i += 1) {
+    for (i = 0; i < (int32_t)sizeof(ran); i += 1) {
         ((char*)&ran)[i] = (char)((rand() & 0x0FF0) >> 4);
     }
 
@@ -63,7 +65,7 @@ static int64_t ranMax;
 
 static void initRandom(int64_t min, int64_t max)
 {
-    uint64_t interval = max - min;
+    uint64_t interval = (uint64_t)max - (uint64_t)min;
 
     ranMin = min;
     ranMax = max;

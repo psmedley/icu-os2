@@ -1,6 +1,8 @@
+// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT:
- * Copyright (c) 2005-2014, International Business Machines Corporation and
+ * Copyright (c) 2005-2016, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 /************************************************************************
@@ -14,8 +16,11 @@
 #include "unicode/utypes.h"
 #include "unicode/utext.h"
 #include "unicode/utf8.h"
+#include "unicode/utf16.h"
 #include "unicode/ustring.h"
 #include "unicode/uchriter.h"
+#include "cmemory.h"
+#include "cstr.h"
 #include "utxttest.h"
 
 static UBool  gFailed = FALSE;
@@ -24,17 +29,21 @@ static int    gTestNum = 0;
 // Forward decl
 UText *openFragmentedUnicodeString(UText *ut, UnicodeString *s, UErrorCode *status);
 
-#define TEST_ASSERT(x) \
-{ if ((x)==FALSE) {errln("Test #%d failure in file %s at line %d\n", gTestNum, __FILE__, __LINE__);\
-                     gFailed = TRUE;\
-   }}
+#define TEST_ASSERT(x) UPRV_BLOCK_MACRO_BEGIN { \
+    if ((x)==FALSE) { \
+        errln("Test #%d failure in file %s at line %d\n", gTestNum, __FILE__, __LINE__); \
+        gFailed = TRUE; \
+    } \
+} UPRV_BLOCK_MACRO_END
 
 
-#define TEST_SUCCESS(status) \
-{ if (U_FAILURE(status)) {errln("Test #%d failure in file %s at line %d. Error = \"%s\"\n", \
-       gTestNum, __FILE__, __LINE__, u_errorName(status)); \
-       gFailed = TRUE;\
-   }}
+#define TEST_SUCCESS(status) UPRV_BLOCK_MACRO_BEGIN { \
+    if (U_FAILURE(status)) { \
+        errln("Test #%d failure in file %s at line %d. Error = \"%s\"\n", \
+              gTestNum, __FILE__, __LINE__, u_errorName(status)); \
+        gFailed = TRUE; \
+    } \
+} UPRV_BLOCK_MACRO_END
 
 UTextTest::UTextTest() {
 }
@@ -46,23 +55,17 @@ UTextTest::~UTextTest() {
 void
 UTextTest::runIndexedTest(int32_t index, UBool exec,
                           const char* &name, char* /*par*/) {
-    switch (index) {
-        case 0: name = "TextTest";
-            if (exec) TextTest();    break;
-        case 1: name = "ErrorTest";
-            if (exec) ErrorTest();   break;
-        case 2: name = "FreezeTest";
-            if (exec) FreezeTest();  break;
-        case 3: name = "Ticket5560";
-            if (exec) Ticket5560();  break;
-        case 4: name = "Ticket6847";
-            if (exec) Ticket6847();  break;
-        case 5: name = "Ticket10562";
-            if (exec) Ticket10562();  break;
-        case 6: name = "Ticket10983";
-            if (exec) Ticket10983();  break;
-        default: name = "";          break;
-    }
+    TESTCASE_AUTO_BEGIN;
+    TESTCASE_AUTO(TextTest);
+    TESTCASE_AUTO(ErrorTest);
+    TESTCASE_AUTO(FreezeTest);
+    TESTCASE_AUTO(Ticket5560);
+    TESTCASE_AUTO(Ticket6847);
+    TESTCASE_AUTO(Ticket10562);
+    TESTCASE_AUTO(Ticket10983);
+    TESTCASE_AUTO(Ticket12130);
+    TESTCASE_AUTO(Ticket13344);
+    TESTCASE_AUTO_END;
 }
 
 //
@@ -267,7 +270,7 @@ void UTextTest::TestString(const UnicodeString &s) {
     i = 0;   // native utf-8 index
     for (j=0; j<cpCount ; j++) {  // code point number
         u8Map[j].nativeIdx = i;
-        U8_NEXT(u8String, i, u8Len, c)
+        U8_NEXT(u8String, i, u8Len, c);
         u8Map[j].cp = c;
     }
     u8Map[cpCount].nativeIdx = u8Len;   // position following the last char in utf-8 string.
@@ -951,10 +954,14 @@ void UTextTest::ErrorTest()
         UChar buf[10];
         int n = utext_extract(ut, 0, 9, buf, 10, &status);
         TEST_SUCCESS(status);
-        TEST_ASSERT(n==5);
+        TEST_ASSERT(n==7);
+        TEST_ASSERT(buf[0] == 0x41);
         TEST_ASSERT(buf[1] == 0xfffd);
-        TEST_ASSERT(buf[3] == 0xfffd);
         TEST_ASSERT(buf[2] == 0x42);
+        TEST_ASSERT(buf[3] == 0xfffd);
+        TEST_ASSERT(buf[4] == 0xfffd);
+        TEST_ASSERT(buf[5] == 0xfffd);
+        TEST_ASSERT(buf[6] == 0x43);
         utext_close(ut);
     }
 
@@ -1011,7 +1018,7 @@ void UTextTest::ErrorTest()
 
         // Check setIndex
         int32_t i;
-        int32_t startMapLimit = sizeof(startMap) / sizeof(int32_t);
+        int32_t startMapLimit = UPRV_LENGTHOF(startMap);
         for (i=0; i<startMapLimit; i++) {
             utext_setNativeIndex(ut, i);
             int64_t cpIndex = utext_getNativeIndex(ut);
@@ -1082,7 +1089,7 @@ void UTextTest::ErrorTest()
         UText *ut = utext_openUnicodeString(NULL, &u16str, &status);
         TEST_SUCCESS(status);
 
-        int32_t startMapLimit = sizeof(startMap) / sizeof(int32_t);
+        int32_t startMapLimit = UPRV_LENGTHOF(startMap);
         int i;
         for (i=0; i<startMapLimit; i++) {
             utext_setNativeIndex(ut, i);
@@ -1150,7 +1157,7 @@ void UTextTest::ErrorTest()
         UText *ut = utext_openReplaceable(NULL, &u16str, &status);
         TEST_SUCCESS(status);
 
-        int32_t startMapLimit = sizeof(startMap) / sizeof(int32_t);
+        int32_t startMapLimit = UPRV_LENGTHOF(startMap);
         int i;
         for (i=0; i<startMapLimit; i++) {
             utext_setNativeIndex(ut, i);
@@ -1501,3 +1508,104 @@ void UTextTest::Ticket10983() {
 
     utext_close(ut);
 }
+
+// Ticket 12130 - extract on a UText wrapping a null terminated UChar * string
+//                leaves the iteration position set incorrectly when the
+//                actual string length is not yet known.
+//
+//                The test text needs to be long enough that UText defers getting the length.
+
+void UTextTest::Ticket12130() {
+    UErrorCode status = U_ZERO_ERROR;
+    
+    const char *text8 =
+        "Fundamentally, computers just deal with numbers. They store letters and other characters "
+        "by assigning a number for each one. Before Unicode was invented, there were hundreds "
+        "of different encoding systems for assigning these numbers. No single encoding could "
+        "contain enough characters: for example, the European Union alone requires several "
+        "different encodings to cover all its languages. Even for a single language like "
+        "English no single encoding was adequate for all the letters, punctuation, and technical "
+        "symbols in common use.";
+
+    UnicodeString str(text8);
+    const UChar *ustr = str.getTerminatedBuffer();
+    UText ut = UTEXT_INITIALIZER;
+    utext_openUChars(&ut, ustr, -1, &status);
+    UChar extractBuffer[50];
+
+    for (int32_t startIdx = 0; startIdx<str.length(); ++startIdx) {
+        int32_t endIdx = startIdx + 20;
+
+        u_memset(extractBuffer, 0, UPRV_LENGTHOF(extractBuffer));
+        utext_extract(&ut, startIdx, endIdx, extractBuffer, UPRV_LENGTHOF(extractBuffer), &status);
+        if (U_FAILURE(status)) {
+            errln("%s:%d %s", __FILE__, __LINE__, u_errorName(status));
+            return;
+        }
+        int64_t ni  = utext_getNativeIndex(&ut);
+        int64_t expectedni = startIdx + 20;
+        if (expectedni > str.length()) {
+            expectedni = str.length();
+        }
+        if (expectedni != ni) {
+            errln("%s:%d utext_getNativeIndex() expected %d, got %d", __FILE__, __LINE__, expectedni, ni);
+        }
+        if (0 != str.tempSubString(startIdx, 20).compare(extractBuffer)) { 
+            errln("%s:%d utext_extract() failed. expected \"%s\", got \"%s\"",
+                    __FILE__, __LINE__, CStr(str.tempSubString(startIdx, 20))(), CStr(UnicodeString(extractBuffer))());
+        }
+    }
+    utext_close(&ut);
+
+    // Similar utext extract, this time with the string length provided to the UText in advance,
+    // and a buffer of larger than required capacity.
+   
+    utext_openUChars(&ut, ustr, str.length(), &status);
+    for (int32_t startIdx = 0; startIdx<str.length(); ++startIdx) {
+        int32_t endIdx = startIdx + 20;
+        u_memset(extractBuffer, 0, UPRV_LENGTHOF(extractBuffer));
+        utext_extract(&ut, startIdx, endIdx, extractBuffer, UPRV_LENGTHOF(extractBuffer), &status);
+        if (U_FAILURE(status)) {
+            errln("%s:%d %s", __FILE__, __LINE__, u_errorName(status));
+            return;
+        }
+        int64_t ni  = utext_getNativeIndex(&ut);
+        int64_t expectedni = startIdx + 20;
+        if (expectedni > str.length()) {
+            expectedni = str.length();
+        }
+        if (expectedni != ni) {
+            errln("%s:%d utext_getNativeIndex() expected %d, got %d", __FILE__, __LINE__, expectedni, ni);
+        }
+        if (0 != str.tempSubString(startIdx, 20).compare(extractBuffer)) { 
+            errln("%s:%d utext_extract() failed. expected \"%s\", got \"%s\"",
+                    __FILE__, __LINE__, CStr(str.tempSubString(startIdx, 20))(), CStr(UnicodeString(extractBuffer))());
+        }
+    }
+    utext_close(&ut);
+}
+
+// Ticket 13344 The macro form of UTEXT_SETNATIVEINDEX failed when target was a trail surrogate
+//              of a supplementary character.
+
+void UTextTest::Ticket13344() {
+    UErrorCode status = U_ZERO_ERROR;
+    const char16_t *str = u"abc\U0010abcd xyz";
+    LocalUTextPointer ut(utext_openUChars(NULL, str, -1, &status));
+
+    assertSuccess("UTextTest::Ticket13344-status", status);
+    UTEXT_SETNATIVEINDEX(ut.getAlias(), 3);
+    assertEquals("UTextTest::Ticket13344-lead", (int64_t)3, utext_getNativeIndex(ut.getAlias()));
+    UTEXT_SETNATIVEINDEX(ut.getAlias(), 4);
+    assertEquals("UTextTest::Ticket13344-trail", (int64_t)3, utext_getNativeIndex(ut.getAlias()));
+    UTEXT_SETNATIVEINDEX(ut.getAlias(), 5);
+    assertEquals("UTextTest::Ticket13344-bmp", (int64_t)5, utext_getNativeIndex(ut.getAlias()));
+
+    utext_setNativeIndex(ut.getAlias(), 3);
+    assertEquals("UTextTest::Ticket13344-lead-2", (int64_t)3, utext_getNativeIndex(ut.getAlias()));
+    utext_setNativeIndex(ut.getAlias(), 4);
+    assertEquals("UTextTest::Ticket13344-trail-2", (int64_t)3, utext_getNativeIndex(ut.getAlias()));
+    utext_setNativeIndex(ut.getAlias(), 5);
+    assertEquals("UTextTest::Ticket13344-bmp-2", (int64_t)5, utext_getNativeIndex(ut.getAlias()));
+}
+

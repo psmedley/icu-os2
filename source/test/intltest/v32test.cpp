@@ -1,3 +1,5 @@
+// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT:
  * Copyright (c) 2002-2007, International Business Machines Corporation and
@@ -55,16 +57,18 @@ void UVector32Test::runIndexedTest( int32_t index, UBool exec, const char* &name
 //   Error Checking / Reporting macros used in all of the tests.
 //
 //---------------------------------------------------------------------------
-#define TEST_CHECK_STATUS(status) \
+#define TEST_CHECK_STATUS(status) UPRV_BLOCK_MACRO_BEGIN {\
     if (U_FAILURE(status)) {\
         errln("UVector32Test failure at line %d.  status=%s\n", __LINE__, u_errorName(status));\
         return;\
-    }
+    }\
+} UPRV_BLOCK_MACRO_END
 
-#define TEST_ASSERT(expr) \
+#define TEST_ASSERT(expr) UPRV_BLOCK_MACRO_BEGIN {\
     if ((expr)==FALSE) {\
         errln("UVector32Test failure at line %d.\n", __LINE__);\
-    }
+    }\
+} UPRV_BLOCK_MACRO_END
 
 //---------------------------------------------------------------------------
 //

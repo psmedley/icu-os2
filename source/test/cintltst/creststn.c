@@ -1,6 +1,8 @@
+// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2015, International Business Machines Corporation and
+ * Copyright (c) 1997-2016, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 /*******************************************************************************
@@ -21,7 +23,10 @@
 #include "unicode/putil.h"
 #include "unicode/ustring.h"
 #include "unicode/ucnv.h"
+#include "unicode/utf8.h"
+#include "unicode/utf16.h"
 #include "string.h"
+#include "cmemory.h"
 #include "cstring.h"
 #include "unicode/uchar.h"
 #include "ucol_imp.h"  /* for U_ICUDATA_COLL */
@@ -57,7 +62,7 @@ randul()
     }
     /* Assume rand has at least 12 bits of precision */
     
-    for (i=0; i<sizeof(l); ++i)
+    for (i=0; i<(int32_t)sizeof(l); ++i)
         ((char*)&l)[i] = (char)((rand() & 0x0FF0) >> 4);
     return l;
 }
@@ -127,10 +132,38 @@ enum E_Where
 typedef enum E_Where E_Where;
 /*****************************************************************************/
 
-#define CONFIRM_EQ(actual,expected) if (u_strcmp(expected,actual)==0){ record_pass(); } else { record_fail(); log_err("%s  returned  %s  instead of %s\n", action, austrdup(actual), austrdup(expected)); }
-#define CONFIRM_INT_EQ(actual,expected) if ((expected)==(actual)) { record_pass(); } else { record_fail(); log_err("%s returned %d instead of %d\n",  action, actual, expected); }
-#define CONFIRM_INT_GE(actual,expected) if ((actual)>=(expected)) { record_pass(); } else { record_fail(); log_err("%s returned %d instead of x >= %d\n",  action, actual, expected); }
-#define CONFIRM_INT_NE(actual,expected) if ((expected)!=(actual)) { record_pass(); } else { record_fail(); log_err("%s returned %d instead of x != %d\n",  action, actual, expected); }
+#define CONFIRM_EQ(actual,expected) UPRV_BLOCK_MACRO_BEGIN { \
+    if (u_strcmp(expected,actual)==0) { \
+        record_pass(); \
+    } else { \
+        record_fail(); \
+        log_err("%s  returned  %s  instead of %s\n", action, austrdup(actual), austrdup(expected)); \
+    } \
+} UPRV_BLOCK_MACRO_END
+#define CONFIRM_INT_EQ(actual,expected) UPRV_BLOCK_MACRO_BEGIN { \
+    if ((expected)==(actual)) { \
+        record_pass(); \
+    } else { \
+        record_fail(); \
+        log_err("%s returned %d instead of %d\n",  action, actual, expected); \
+    } \
+} UPRV_BLOCK_MACRO_END
+#define CONFIRM_INT_GE(actual,expected) UPRV_BLOCK_MACRO_BEGIN { \
+    if ((actual)>=(expected)) { \
+        record_pass(); \
+    } else { \
+        record_fail(); \
+        log_err("%s returned %d instead of x >= %d\n",  action, actual, expected); \
+    } \
+} UPRV_BLOCK_MACRO_END
+#define CONFIRM_INT_NE(actual,expected) UPRV_BLOCK_MACRO_BEGIN { \
+    if ((expected)!=(actual)) { \
+        record_pass(); \
+    } else { \
+        record_fail(); \
+        log_err("%s returned %d instead of x != %d\n",  action, actual, expected); \
+    } \
+} UPRV_BLOCK_MACRO_END
 /*#define CONFIRM_ErrorCode(actual,expected) if ((expected)==(actual)) { record_pass(); } else { record_fail();  log_err("%s returned  %s  instead of %s\n", action, myErrorName(actual), myErrorName(expected)); } */
 static void 
 CONFIRM_ErrorCode(UErrorCode actual,UErrorCode expected) 
@@ -170,7 +203,7 @@ param[] =
   { "ne",           U_USING_DEFAULT_WARNING,  e_Root,    { TRUE, FALSE, FALSE }, { TRUE, FALSE, FALSE } }
 };
 
-static int32_t bundles_count = sizeof(param) / sizeof(param[0]);
+static int32_t bundles_count = UPRV_LENGTHOF(param);
 
 
 
@@ -353,7 +386,7 @@ static void TestAliasConflict(void) {
     }
     ures_close(he);
 
-    size = sizeof(norwayNames)/sizeof(norwayNames[0]);
+    size = UPRV_LENGTHOF(norwayNames);
     for(i = 0; i < size; i++) {
         status = U_ZERO_ERROR;
         norway = ures_open(NULL, norwayNames[i], &status);
@@ -1011,8 +1044,8 @@ static void TestAPI() {
     }
 #endif
 
-    u_memset(largeBuffer, 0x0030, sizeof(largeBuffer)/sizeof(largeBuffer[0]));
-    largeBuffer[sizeof(largeBuffer)/sizeof(largeBuffer[0])-1] = 0;
+    u_memset(largeBuffer, 0x0030, UPRV_LENGTHOF(largeBuffer));
+    largeBuffer[UPRV_LENGTHOF(largeBuffer)-1] = 0;
 
     /*Test ures_openU */
 
@@ -1173,12 +1206,20 @@ static void TestErrorConditions(){
         log_err("ERROR: ures_openU() is supposed to fail path =%s with status != U_ZERO_ERROR\n", austrdup(utestdatapath));
         ures_close(teRes);
     }
-    /*Test ures_openFillIn with UResourceBundle = NULL*/
+    /*Test ures_openFillIn fails when input UResourceBundle parameter is NULL*/
     log_verbose("Testing ures_openFillIn with UResourceBundle = NULL.....\n");
     status=U_ZERO_ERROR;
     ures_openFillIn(NULL, testdatapath, "te", &status);
     if(status != U_ILLEGAL_ARGUMENT_ERROR){
         log_err("ERROR: ures_openFillIn with UResourceBundle= NULL should fail.  Expected U_ILLEGAL_ARGUMENT_ERROR, Got: %s\n",
+                        myErrorName(status));
+    }
+    /*Test ures_openDirectFillIn fails when input UResourceBundle parameter is NULL*/
+    log_verbose("Testing ures_openDirectFillIn with UResourceBundle = NULL.....\n");
+    status=U_ZERO_ERROR;
+    ures_openDirectFillIn(NULL, testdatapath, "te", &status);
+    if(status != U_ILLEGAL_ARGUMENT_ERROR){
+        log_err("ERROR: ures_openDirectFillIn with UResourceBundle= NULL should fail.  Expected U_ILLEGAL_ARGUMENT_ERROR, Got: %s\n",
                         myErrorName(status));
     }
     /*Test ures_getLocale() with status != U_ZERO_ERROR*/
@@ -2124,7 +2165,7 @@ static void TestFallback()
         UResourceBundle* tResB;
         UResourceBundle* zoneResource;
         const UChar* version = NULL;
-        static const UChar versionStr[] = { 0x0032, 0x002E, 0x0031, 0x002E, 0x0031, 0x0039, 0x002E, 0x0031, 0x0034, 0x0000}; // 2.1.19.14
+        static const UChar versionStr[] = u"36"; // 36 in nn_NO
 
         if(err != U_ZERO_ERROR){
             log_data_err("Expected U_ZERO_ERROR when trying to test no_NO_NY aliased to nn_NO for Version err=%s\n",u_errorName(err));
@@ -2294,7 +2335,7 @@ static void TestResourceLevelAliasing(void) {
         if(U_FAILURE(status)) {
           log_err("FAIL: Couldn't get testGetStringByKeyAliasing resource: %s\n", u_errorName(status));
         } else {
-            for(i = 0; i < sizeof(strings)/sizeof(strings[0]); i++) {
+            for(i = 0; i < UPRV_LENGTHOF(strings); i++) {
                 result = tres_getString(tb, -1, keys[i], &resultLen, &status);
                 if(U_FAILURE(status)){
                     log_err("(1) Fetching the resource with key %s failed. Error: %s\n", keys[i], u_errorName(status));
@@ -2305,7 +2346,7 @@ static void TestResourceLevelAliasing(void) {
                   log_err("(1) Didn't get correct string while accessing alias table by key (%s)\n", keys[i]);
                 }
             }
-            for(i = 0; i < sizeof(strings)/sizeof(strings[0]); i++) {
+            for(i = 0; i < UPRV_LENGTHOF(strings); i++) {
                 result = tres_getString(tb, i, NULL, &resultLen, &status); 
                 if(U_FAILURE(status)){
                     log_err("(2) Fetching the resource with key %s failed. Error: %s\n", keys[i], u_errorName(status));
@@ -2316,7 +2357,7 @@ static void TestResourceLevelAliasing(void) {
                   log_err("(2) Didn't get correct string while accesing alias table by index (%s)\n", strings[i]);
                 }
             }
-            for(i = 0; i < sizeof(strings)/sizeof(strings[0]); i++) {
+            for(i = 0; i < UPRV_LENGTHOF(strings); i++) {
                 result = ures_getNextString(tb, &resultLen, &key, &status);
                 if(U_FAILURE(status)){
                     log_err("(3) Fetching the resource with key %s failed. Error: %s\n", keys[i], u_errorName(status));
@@ -2332,7 +2373,7 @@ static void TestResourceLevelAliasing(void) {
         if(U_FAILURE(status)) {
           log_err("FAIL: Couldn't get testGetStringByIndexAliasing resource: %s\n", u_errorName(status));
         } else {
-            for(i = 0; i < sizeof(strings)/sizeof(strings[0]); i++) {
+            for(i = 0; i < UPRV_LENGTHOF(strings); i++) {
                 result = tres_getString(tb, i, NULL, &resultLen, &status);
                 if(U_FAILURE(status)){
                     log_err("Fetching the resource with key %s failed. Error: %s\n", keys[i], u_errorName(status));
@@ -2343,7 +2384,7 @@ static void TestResourceLevelAliasing(void) {
                   log_err("Didn't get correct string while accesing alias by index in an array (%s)\n", strings[i]);
                 }
             }
-            for(i = 0; i < sizeof(strings)/sizeof(strings[0]); i++) {
+            for(i = 0; i < UPRV_LENGTHOF(strings); i++) {
                 result = ures_getNextString(tb, &resultLen, &key, &status);
                 if(U_FAILURE(status)){
                     log_err("Fetching the resource with key %s failed. Error: %s\n", keys[i], u_errorName(status));
@@ -2619,29 +2660,30 @@ static void TestGetFunctionalEquivalent(void) {
 #if !UCONFIG_NO_COLLATION
     static const char * const collCases[] = {
         /*   avail   locale          equiv   */
+        /* note: in ICU 64, empty locales are shown as available for collation */
         "f",    "sv_US_CALIFORNIA",               "sv",
         "f",    "zh_TW@collation=stroke",         "zh@collation=stroke", /* alias of zh_Hant_TW */
-        "f",    "zh_Hant_TW@collation=stroke",    "zh@collation=stroke",
+        "t",    "zh_Hant_TW@collation=stroke",    "zh@collation=stroke",
         "f",    "sv_CN@collation=pinyin",         "sv",
         "t",    "zh@collation=pinyin",            "zh",
         "f",    "zh_CN@collation=pinyin",         "zh", /* alias of zh_Hans_CN */
-        "f",    "zh_Hans_CN@collation=pinyin",    "zh",
+        "t",    "zh_Hans_CN@collation=pinyin",    "zh",
         "f",    "zh_HK@collation=pinyin",         "zh", /* alias of zh_Hant_HK */
-        "f",    "zh_Hant_HK@collation=pinyin",    "zh",
+        "t",    "zh_Hant_HK@collation=pinyin",    "zh",
         "f",    "zh_HK@collation=stroke",         "zh@collation=stroke", /* alias of zh_Hant_HK */
-        "f",    "zh_Hant_HK@collation=stroke",    "zh@collation=stroke",
+        "t",    "zh_Hant_HK@collation=stroke",    "zh@collation=stroke",
         "f",    "zh_HK",                          "zh@collation=stroke", /* alias of zh_Hant_HK */
-        "f",    "zh_Hant_HK",                     "zh@collation=stroke",
+        "t",    "zh_Hant_HK",                     "zh@collation=stroke",
         "f",    "zh_MO",                          "zh@collation=stroke", /* alias of zh_Hant_MO */
-        "f",    "zh_Hant_MO",                     "zh@collation=stroke",
+        "t",    "zh_Hant_MO",                     "zh@collation=stroke",
         "f",    "zh_TW_STROKE",                   "zh@collation=stroke",
         "f",    "zh_TW_STROKE@collation=pinyin",  "zh",
         "f",    "sv_CN@calendar=japanese",        "sv",
         "t",    "sv@calendar=japanese",           "sv",
         "f",    "zh_TW@collation=pinyin",         "zh", /* alias of zh_Hant_TW */
-        "f",    "zh_Hant_TW@collation=pinyin",    "zh",
+        "t",    "zh_Hant_TW@collation=pinyin",    "zh",
         "f",    "zh_CN@collation=stroke",         "zh@collation=stroke", /* alias of zh_Hans_CN */
-        "f",    "zh_Hans_CN@collation=stroke",    "zh@collation=stroke",
+        "t",    "zh_Hans_CN@collation=stroke",    "zh@collation=stroke",
         "t",    "de@collation=phonebook",         "de@collation=phonebook",
         "t",    "hi@collation=standard",          "hi",
         "f",    "hi_AU@collation=standard;currency=CHF;calendar=buddhist",    "hi",
@@ -2789,7 +2831,7 @@ static void TestCLDRStyleAliases(void) {
       /* instead of sprintf(resource, "a%i", i); */
       a = ures_getByKeyWithFallback(alias, resource, a, &status);
       result = tres_getString(a, -1, NULL, &len, &status);
-      u_charsToUChars(expects[i], expected, strlen(expects[i])+1);
+      u_charsToUChars(expects[i], expected, (int32_t)strlen(expects[i])+1);
       if(U_FAILURE(status) || !result || u_strcmp(result, expected)) {
         log_err("CLDR style aliases failed resource with name \"%s\" resource, exp %s, got %S (%s)\n", resource, expects[i], result, myErrorName(status)); 
         status = U_ZERO_ERROR;
@@ -2932,7 +2974,7 @@ tres_getString(const UResourceBundle *resB,
         }
 
         /* verify NUL-termination */
-        if((p8 != buffer8 || length8 < sizeof(buffer8)) && s8[length8] != 0) {
+        if((p8 != buffer8 || length8 < (int32_t)sizeof(buffer8)) && s8[length8] != 0) {
             log_err("ures_getUTF8String(%p, %ld, '%s') did not NUL-terminate\n",
                     resB, (long)idx, key);
         }

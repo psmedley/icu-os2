@@ -1,3 +1,5 @@
+// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
  *******************************************************************************
  *
@@ -242,7 +244,7 @@ static void U_CALLCONV AccessTest(void)
     SimpleFontInstance *font = new SimpleFontInstance(12, status);
     LayoutEngine *engine = LayoutEngine::layoutEngineFactory(font, arabScriptCode, -1, status);
     le_int32 glyphCount;
-    LEGlyphID glyphs[6], extraBitGlyphs[6];;
+    LEGlyphID glyphs[6], extraBitGlyphs[6];
     le_int32 biasedIndices[6], indices[6], glyph;
     float positions[6 * 2 + 2];
     LEUnicode chars[] = {

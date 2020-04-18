@@ -1,11 +1,14 @@
+// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2014, International Business Machines Corporation and
+ * Copyright (c) 1997-2016, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 
 #include "unicode/utypes.h"
 
+#include "cmemory.h"
 #include "cstring.h"
 #include "unicode/unistr.h"
 #include "unicode/uniset.h"
@@ -34,11 +37,35 @@ enum E_Where
 
 //***************************************************************************************
 
-#define CONFIRM_EQ(actual, expected, myAction) if ((expected)==(actual)) { record_pass(myAction); } else { record_fail(myAction + (UnicodeString)" returned " + (actual) + (UnicodeString)" instead of " + (expected) + "\n");}
-#define CONFIRM_GE(actual, expected, myAction) if ((actual)>=(expected)) { record_pass(myAction); } else { record_fail(myAction + (UnicodeString)" returned " + (actual) + (UnicodeString)" instead of x >= " + (expected) + "\n");}
-#define CONFIRM_NE(actual, expected, myAction) if ((expected)!=(actual)) { record_pass(myAction); } else { record_fail(myAction + (UnicodeString)" returned " + (actual) + (UnicodeString)" instead of x != " + (expected) + "\n");}
+#define CONFIRM_EQ(actual, expected, myAction) UPRV_BLOCK_MACRO_BEGIN { \
+    if ((expected)==(actual)) { \
+        record_pass(myAction); \
+    } else { \
+        record_fail(myAction + (UnicodeString)" returned " + (actual) + (UnicodeString)" instead of " + (expected) + "\n"); \
+    } \
+} UPRV_BLOCK_MACRO_END
+#define CONFIRM_GE(actual, expected, myAction) UPRV_BLOCK_MACRO_BEGIN { \
+    if ((actual)>=(expected)) { \
+        record_pass(myAction); \
+    } else { \
+        record_fail(myAction + (UnicodeString)" returned " + (actual) + (UnicodeString)" instead of x >= " + (expected) + "\n"); \
+    } \
+} UPRV_BLOCK_MACRO_END
+#define CONFIRM_NE(actual, expected, myAction) UPRV_BLOCK_MACRO_BEGIN { \
+    if ((expected)!=(actual)) { \
+        record_pass(myAction); \
+    } else { \
+        record_fail(myAction + (UnicodeString)" returned " + (actual) + (UnicodeString)" instead of x != " + (expected) + "\n"); \
+    } \
+} UPRV_BLOCK_MACRO_END
 
-#define CONFIRM_UErrorCode(actual, expected, myAction) if ((expected)==(actual)) { record_pass(myAction); } else { record_fail(myAction + (UnicodeString)" returned " + u_errorName(actual) + " instead of " + u_errorName(expected) + "\n"); }
+#define CONFIRM_UErrorCode(actual, expected, myAction) UPRV_BLOCK_MACRO_BEGIN { \
+    if ((expected)==(actual)) { \
+        record_pass(myAction); \
+    } else { \
+        record_fail(myAction + (UnicodeString)" returned " + u_errorName(actual) + " instead of " + u_errorName(expected) + "\n"); \
+    } \
+} UPRV_BLOCK_MACRO_END
 
 //***************************************************************************************
 
@@ -107,7 +134,7 @@ param[] =
     { "ne",         NULL,   U_USING_DEFAULT_WARNING,  e_Root,      { TRUE, FALSE, FALSE }, { TRUE, FALSE, FALSE } }
 };
 
-static const int32_t bundles_count = sizeof(param) / sizeof(param[0]);
+static const int32_t bundles_count = UPRV_LENGTHOF(param);
 
 //***************************************************************************************
 
@@ -171,7 +198,7 @@ ResourceBundleTest::~ResourceBundleTest()
 {
     if (param[5].locale) {
         int idx;
-        for (idx = 0; idx < (int)(sizeof(param)/sizeof(param[0])); idx++) {
+        for (idx = 0; idx < UPRV_LENGTHOF(param); idx++) {
             delete param[idx].locale;
             param[idx].locale = NULL;
         }
@@ -549,7 +576,7 @@ ResourceBundleTest::TestGetSize(void)
         return;
     }
     
-    for(i = 0; i < (int32_t)(sizeof(test)/sizeof(test[0])); i++) {
+    for(i = 0; i < UPRV_LENGTHOF(test); i++) {
         ResourceBundle res = rb.get(test[i].key, status);
         if(U_FAILURE(status))
         {
@@ -578,8 +605,8 @@ ResourceBundleTest::TestGetLocaleByType(void)
     } test[] = {
         { "te_IN_BLAH", "string_only_in_te_IN", "te_IN", "te_IN" },
         { "te_IN_BLAH", "string_only_in_te", "te_IN", "te" },
-        { "te_IN_BLAH", "string_only_in_Root", "te_IN", "root" },
-        { "te_IN_BLAH_01234567890_01234567890_01234567890_01234567890_01234567890_01234567890", "array_2d_only_in_Root", "te_IN", "root" },
+        { "te_IN_BLAH", "string_only_in_Root", "te_IN", "" },
+        { "te_IN_BLAH_01234567890_01234567890_01234567890_01234567890_01234567890_01234567890", "array_2d_only_in_Root", "te_IN", "" },
         { "te_IN_BLAH@currency=euro", "array_2d_only_in_te_IN", "te_IN", "te_IN" },
         { "te_IN_BLAH@calendar=thai;collation=phonebook", "array_2d_only_in_te", "te_IN", "te" }
     };
@@ -596,7 +623,7 @@ ResourceBundleTest::TestGetLocaleByType(void)
         return;
     }
     
-    for(i = 0; i < (int32_t)(sizeof(test)/sizeof(test[0])); i++) {
+    for(i = 0; i < UPRV_LENGTHOF(test); i++) {
         ResourceBundle rb(testdatapath, test[i].requestedLocale, status);
         if(U_FAILURE(status))
         {

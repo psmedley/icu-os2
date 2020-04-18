@@ -1,3 +1,5 @@
+// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
  * Copyright (c) 1997-2010, International Business Machines Corporation and
@@ -180,7 +182,7 @@ void ParsePositionTest::TestFieldPosition_example()
     if (failure(status, "NumberFormat::createInstance", TRUE)){
         delete nf;
         return;
-    };
+    }
 
     DecimalFormat *fmt = dynamic_cast<DecimalFormat *>(nf);
     if(fmt == NULL) {

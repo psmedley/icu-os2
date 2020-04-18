@@ -1,6 +1,8 @@
+// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /***************************************************************************
 *
-*   Copyright (C) 2000-2009, International Business Machines
+*   Copyright (C) 2000-2016, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 ************************************************************************
@@ -157,10 +159,10 @@ void CompoundTransliteratorTest::TestCloneEqual(){
         errln("Error: =operator or copy constructor failed");
     }
 
-    CompoundTransliterator *clonect1a=(CompoundTransliterator*)ct1->clone();
-    CompoundTransliterator *clonect1b=(CompoundTransliterator*)equalct1.clone();
-    CompoundTransliterator *clonect2a=(CompoundTransliterator*)ct2->clone();
-    CompoundTransliterator *clonect2b=(CompoundTransliterator*)copyct2->clone();
+    CompoundTransliterator *clonect1a=ct1->clone();
+    CompoundTransliterator *clonect1b=equalct1.clone();
+    CompoundTransliterator *clonect2a=ct2->clone();
+    CompoundTransliterator *clonect2b=copyct2->clone();
 
 
     if(clonect1a->getID()  != ct1->getID()       || clonect1a->getCount() != ct1->getCount()        ||
@@ -385,7 +387,7 @@ void CompoundTransliteratorTest::TestTransliterate(){
                                                                  CharsToUnicodeString("vavivuvevohuzizuzonyinyunyasesuzezu"),  
     };
     uint32_t i;
-    for(i=0; i<sizeof(Data)/sizeof(Data[0]); i=i+3){
+    for(i=0; i<UPRV_LENGTHOF(Data); i=i+3){
         UErrorCode status = U_ZERO_ERROR;
 
         CompoundTransliterator *ct2=new CompoundTransliterator(Data[i+0], parseError, status);

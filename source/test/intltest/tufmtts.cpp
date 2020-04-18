@@ -1,5 +1,7 @@
+// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
- * Copyright (c) 2008-2014, International Business Machines Corporation and
+ * Copyright (c) 2008-2016, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 
@@ -11,9 +13,9 @@
 #include "unicode/tmunit.h"
 #include "unicode/tmutamt.h"
 #include "unicode/tmutfmt.h"
-#include "tufmtts.h"
-#include "cmemory.h"
 #include "unicode/ustring.h"
+#include "cmemory.h"
+#include "intltest.h"
 
 //TODO: put as compilation flag
 //#define TUFMTTS_DEBUG 1
@@ -22,16 +24,60 @@
 #include <iostream>
 #endif
 
-void TimeUnitTest::runIndexedTest( int32_t index, UBool exec, const char* &name, char* /*par*/ ) {
-    if (exec) logln("TestSuite TimeUnitTest");
-    switch (index) {
-        TESTCASE(0, testBasic);
-        TESTCASE(1, testAPI);
-        TESTCASE(2, testGreekWithFallback);
-        TESTCASE(3, testGreekWithSanitization);
-        TESTCASE(4, test10219Plurals);
-        default: name = ""; break;
+class TimeUnitTest : public IntlTest {
+    void runIndexedTest(int32_t index, UBool exec, const char* &name, char* /*par*/ ) {
+        if (exec) logln("TestSuite TimeUnitTest");
+        TESTCASE_AUTO_BEGIN;
+        TESTCASE_AUTO(testBasic);
+        TESTCASE_AUTO(testAPI);
+        TESTCASE_AUTO(testGreekWithFallback);
+        TESTCASE_AUTO(testGreekWithSanitization);
+        TESTCASE_AUTO(test10219Plurals);
+        TESTCASE_AUTO(TestBritishShortHourFallback);
+        TESTCASE_AUTO_END;
     }
+
+public:
+    /**
+     * Performs basic tests
+     **/
+    void testBasic();
+
+    /**
+     * Performs API tests
+     **/
+    void testAPI();
+
+    /**
+     * Performs tests for Greek
+     * This tests that requests for short unit names correctly fall back 
+     * to long unit names for a locale where the locale data does not 
+     * provide short unit names. As of CLDR 1.9, Greek is one such language.
+     **/
+    void testGreekWithFallback();
+
+    /**
+     * Performs tests for Greek
+     * This tests that if the plural count listed in time unit format does not
+     * match those in the plural rules for the locale, those plural count in
+     * time unit format will be ingored and subsequently, fall back will kick in
+     * which is tested above.
+     * Without data sanitization, setNumberFormat() would crash.
+     * As of CLDR shiped in ICU4.8, Greek is one such language.
+     */
+    void testGreekWithSanitization();
+
+    /**
+     * Performs unit test for ticket 10219 making sure that plurals work
+     * correctly with rounding.
+     */
+    void test10219Plurals();
+
+    void TestBritishShortHourFallback();
+};
+
+extern IntlTest *createTimeUnitTest() {
+    return new TimeUnitTest();
 }
 
 // This function is more lenient than equals operator as it considers integer 3 hours and
@@ -57,7 +103,7 @@ static UBool tmaEqual(const TimeUnitAmount& left, const TimeUnitAmount& right) {
 void TimeUnitTest::testBasic() {
     const char* locales[] = {"en", "sl", "fr", "zh", "ar", "ru", "zh_Hant", "pa"};
     for ( unsigned int locIndex = 0; 
-          locIndex < sizeof(locales)/sizeof(locales[0]); 
+          locIndex < UPRV_LENGTHOF(locales); 
           ++locIndex ) {
         UErrorCode status = U_ZERO_ERROR;
         Locale loc(locales[locIndex]);
@@ -79,7 +125,7 @@ void TimeUnitTest::testBasic() {
             std::cout << "time unit: " << j << "\n";
 #endif
             double tests[] = {0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 5, 10, 100, 101.35};
-            for (unsigned int i = 0; i < sizeof(tests)/sizeof(tests[0]); ++i) {
+            for (unsigned int i = 0; i < UPRV_LENGTHOF(tests); ++i) {
 #ifdef TUFMTTS_DEBUG
                 std::cout << "number: " << tests[i] << "\n";
 #endif
@@ -125,7 +171,7 @@ void TimeUnitTest::testAPI() {
     TimeUnit* tmunit = TimeUnit::createInstance(TimeUnit::UTIMEUNIT_YEAR, status);
     if (!assertSuccess("TimeUnit::createInstance", status)) return;
 
-    TimeUnit* another = (TimeUnit*)tmunit->clone();
+    TimeUnit* another = tmunit->clone();
     TimeUnit third(*tmunit);
     TimeUnit fourth = third;
 
@@ -193,7 +239,7 @@ void TimeUnitTest::testAPI() {
 
     TimeUnitAmount second(tma);
     TimeUnitAmount third_tma = tma;
-    TimeUnitAmount* fourth_tma = (TimeUnitAmount*)tma.clone();
+    TimeUnitAmount* fourth_tma = tma.clone();
 
     assertTrue("orig and copy are equal", (second == tma));
     assertTrue("clone and assigned are equal", (third_tma == *fourth_tma));
@@ -220,7 +266,7 @@ void TimeUnitTest::testAPI() {
     TimeUnitFormat tmf_copy(tmf_fr);
     assertTrue("TimeUnitFormat: orig and copy are equal", (tmf_fr == tmf_copy));
 
-    TimeUnitFormat* tmf_clone = (TimeUnitFormat*)tmf_en->clone();
+    TimeUnitFormat* tmf_clone = tmf_en->clone();
     assertTrue("TimeUnitFormat: orig and clone are equal", (*tmf_en == *tmf_clone));
     delete tmf_clone;
 
@@ -323,24 +369,24 @@ void TimeUnitTest::testGreekWithFallback() {
 
     int counter = 0;
     for ( unsigned int locIndex = 0;
-        locIndex < sizeof(locales)/sizeof(locales[0]);
+        locIndex < UPRV_LENGTHOF(locales);
         ++locIndex ) {
 
         Locale l = Locale::createFromName(locales[locIndex]);
 
         for ( unsigned int numberIndex = 0;
-            numberIndex < sizeof(numbers)/sizeof(int);
+            numberIndex < UPRV_LENGTHOF(numbers);
             ++numberIndex ) {
 
             for ( unsigned int styleIndex = 0;
-                styleIndex < sizeof(styles)/sizeof(styles[0]);
+                styleIndex < UPRV_LENGTHOF(styles);
                 ++styleIndex ) {
 
                 for ( unsigned int unitIndex = 0;
-                    unitIndex < sizeof(tunits)/sizeof(tunits[0]);
+                    unitIndex < UPRV_LENGTHOF(tunits);
                     ++unitIndex ) {
 
-                    TimeUnitAmount *tamt = new TimeUnitAmount(numbers[numberIndex], tunits[unitIndex], status);
+                    LocalPointer<TimeUnitAmount>tamt(new TimeUnitAmount(numbers[numberIndex], tunits[unitIndex], status));
                     if (U_FAILURE(status)) {
                         dataerrln("generating TimeUnitAmount Object failed.");
 #ifdef TUFMTTS_DEBUG
@@ -349,7 +395,7 @@ void TimeUnitTest::testGreekWithFallback() {
                         return;
                     }
 
-                    TimeUnitFormat *tfmt = new TimeUnitFormat(l, styles[styleIndex], status);
+                    LocalPointer<TimeUnitFormat> tfmt(new TimeUnitFormat(l, styles[styleIndex], status));
                     if (U_FAILURE(status)) {
                         dataerrln("generating TimeUnitAmount Object failed.");
 #ifdef TUFMTTS_DEBUG
@@ -361,10 +407,9 @@ void TimeUnitTest::testGreekWithFallback() {
                     Formattable fmt;
                     UnicodeString str;
 
-                    fmt.adoptObject(tamt);
-                    str = ((Format *)tfmt)->format(fmt, str, status);
+                    fmt.adoptObject(tamt.orphan());
+                    str = ((Format *)tfmt.getAlias())->format(fmt, str, status);
                     if (!assertSuccess("formatting relative time failed", status)) {
-                        delete tfmt;
 #ifdef TUFMTTS_DEBUG
                         std::cout <<  "Failed to format" << "\n";
 #endif
@@ -380,11 +425,9 @@ void TimeUnitTest::testGreekWithFallback() {
                     std::cout <<  "Formatted string : " << tmp << " expected : " << tmp1 << "\n";
 #endif
                     if (!assertEquals("formatted time string is not expected, locale: " + UnicodeString(locales[locIndex]) + " style: " + (int)styles[styleIndex] + " units: " + (int)tunits[unitIndex], expected[counter], str)) {
-                        delete tfmt;
                         str.remove();
                         return;
                     }
-                    delete tfmt;
                     str.remove();
                     ++counter;
                 }
@@ -467,6 +510,18 @@ void TimeUnitTest::test10219Plurals() {
     if (formattedString.length() != pos.getIndex()) {
         errln("Expect parsing to go all the way to the end of the string.");
     }
+}
+
+void TimeUnitTest::TestBritishShortHourFallback() {
+    // See ticket #11986 "incomplete fallback in MeasureFormat".
+    UErrorCode status = U_ZERO_ERROR;
+    Formattable oneHour(new TimeUnitAmount(1, TimeUnit::UTIMEUNIT_HOUR, status));
+    Locale en_GB("en_GB");
+    TimeUnitFormat formatter(en_GB, UTMUTFMT_ABBREVIATED_STYLE, status);
+    UnicodeString result;
+    formatter.format(oneHour, result, status);
+    assertSuccess("TestBritishShortHourFallback()", status);
+    assertEquals("TestBritishShortHourFallback()", UNICODE_STRING_SIMPLE("1 hr"), result, TRUE);
 }
 
 #endif

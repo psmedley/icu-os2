@@ -1,3 +1,5 @@
+// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /***********************************************************************
  * Copyright (c) 1997-2009, International Business Machines Corporation
  * and others. All Rights Reserved.
@@ -11,6 +13,7 @@
 #include "unicode/smpdtfmt.h"
 #include "tsdate.h"
 #include "putilimp.h"
+#include "cstring.h"
 
 #include <float.h>
 #include <stdlib.h>
@@ -161,14 +164,22 @@ void IntlTestDateFormat::tryDate(UDate theDate)
     date[0] = theDate;
     fFormat->format(theDate, string[0]);
 
+    UErrorCode status = U_ZERO_ERROR;
+    const char* locID = "??";
+    Locale loc = fFormat->getCalendar()->getLocale(ULOC_VALID_LOCALE, status);
+    if (U_SUCCESS(status)) {
+        locID = loc.getName();
+    }
+
     for (i=1; i<DEPTH; ++i)
     {
-        UErrorCode status = U_ZERO_ERROR;
+        status = U_ZERO_ERROR;
         date[i] = fFormat->parse(string[i-1], status);
         if (U_FAILURE(status))
         {
             describeTest();
-            errln("**** FAIL: Parse of " + prettify(string[i-1], FALSE) + " failed.");
+            errln("**** FAIL, locale " + UnicodeString(locID,-1,US_INV) +
+                    ": Parse of " + prettify(string[i-1], FALSE) + " failed.");
             dump = TRUE;
             break;
         }
@@ -178,7 +189,8 @@ void IntlTestDateFormat::tryDate(UDate theDate)
         else if (dateMatch > 0 && date[i] != date[i-1])
         {
             describeTest();
-            errln("**** FAIL: Date mismatch after match for " + string[i]);
+            errln("**** FAIL, locale " + UnicodeString(locID,-1,US_INV) +
+                    ": Date mismatch after match for " + string[i]);
             dump = TRUE;
             break;
         }
@@ -187,7 +199,8 @@ void IntlTestDateFormat::tryDate(UDate theDate)
         else if (stringMatch > 0 && string[i] != string[i-1])
         {
             describeTest();
-            errln("**** FAIL: String mismatch after match for " + string[i]);
+            errln("**** FAIL, locale " + UnicodeString(locID,-1,US_INV) +
+                    ": String mismatch after match for " + string[i]);
             dump = TRUE;
             break;
         }

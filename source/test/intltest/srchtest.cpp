@@ -1,6 +1,8 @@
+// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 *****************************************************************************
-* Copyright (C) 2001-2011, International Business Machines orporation  
+* Copyright (C) 2001-2016, International Business Machines orporation  
 * and others. All Rights Reserved.
 ****************************************************************************/
 
@@ -15,6 +17,7 @@
 #include "unicode/stsearch.h"
 #include "unicode/ustring.h"
 #include "unicode/schriter.h"
+#include "cmemory.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -641,7 +644,7 @@ void StringSearchTest::TestOpenClose()
     }
     delete result;
 
-    text.append(0, 0x1);
+    // No-op: text.append(0, 0x1); -- what was intended here?
     status = U_ZERO_ERROR;
     result = new StringSearch(pattern, text, NULL, NULL, status);
     if (U_SUCCESS(status)) {
@@ -766,7 +769,7 @@ void StringSearchTest::TestInitialization()
     }
     delete copy;
 
-    copy = (StringSearch *)result->safeClone();
+    copy = result->safeClone();
     if (*(copy->getCollator()) != *(result->getCollator()) ||
         copy->getBreakIterator() != result->getBreakIterator() ||
         copy->getMatchedLength() != result->getMatchedLength() ||
@@ -2422,7 +2425,7 @@ void StringSearchTest::TestSubclass()
     search.reset();
     // comparing constructors
  
-    for (i = 0; i < (int)(sizeof(expected) / sizeof(expected[0])); i ++) {
+    for (i = 0; i < UPRV_LENGTHOF(expected); i ++) {
         if (search.next(status) != expected[i]) {
             errln("Error getting next match");
         }
@@ -2433,7 +2436,7 @@ void StringSearchTest::TestSubclass()
     if (search.next(status) != USEARCH_DONE) {
         errln("Error should have reached the end of the iteration");
     }
-    for (i = sizeof(expected) / sizeof(expected[0]) - 1; i >= 0; i --) {
+    for (i = UPRV_LENGTHOF(expected) - 1; i >= 0; i --) {
         if (search.previous(status) != expected[i]) {
             errln("Error getting previous match");
         }
@@ -2449,11 +2452,11 @@ void StringSearchTest::TestSubclass()
 class StubSearchIterator:public SearchIterator{
 public:
     StubSearchIterator(){}
-    virtual void setOffset(int32_t , UErrorCode &) {};
-    virtual int32_t getOffset(void) const {return 0;};
-    virtual SearchIterator* safeClone(void) const {return NULL;};
-    virtual int32_t handleNext(int32_t , UErrorCode &){return 0;};
-    virtual int32_t handlePrev(int32_t , UErrorCode &) {return 0;};
+    virtual void setOffset(int32_t , UErrorCode &) {}
+    virtual int32_t getOffset(void) const {return 0;}
+    virtual SearchIterator* safeClone(void) const {return NULL;}
+    virtual int32_t handleNext(int32_t , UErrorCode &){return 0;}
+    virtual int32_t handlePrev(int32_t , UErrorCode &) {return 0;}
     virtual UClassID getDynamicClassID() const {
         static char classID = 0;
         return (UClassID)&classID; 

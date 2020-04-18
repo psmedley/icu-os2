@@ -1,3 +1,5 @@
+// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /*
 *******************************************************************************
 *
@@ -6,7 +8,7 @@
 *
 *******************************************************************************
 *   file name:  store.c
-*   encoding:   US-ASCII
+*   encoding:   UTF-8
 *   tab size:   8 (not used)
 *   indentation:4
 *
@@ -326,7 +328,7 @@ storeMappingData(){
                      mappingData[currentIndex++] = (uint16_t) mappingLength;
                 }
                 /* copy the contents to mappindData array */
-                uprv_memmove(mappingData+currentIndex, value->mapping, value->length*U_SIZEOF_UCHAR);
+                u_memmove(mappingData+currentIndex, value->mapping, value->length);
                 currentIndex += value->length;
                 if (currentIndex > mappingDataCapacity) {
                     /* If this happens there is a bug in the computation of the mapping data size in storeMapping() */
@@ -462,7 +464,8 @@ storeMapping(uint32_t codepoint, uint32_t* mapping,int32_t length,
 
 
 extern void
-storeRange(uint32_t start, uint32_t end, UStringPrepType type,UErrorCode* status){
+storeRange(uint32_t start, uint32_t end, UStringPrepType type, UErrorCode* status){
+    (void)status; // suppress compiler warnings about unused variable
     uint16_t trieWord = 0;
 
     if((int)(_SPREP_TYPE_THRESHOLD + type) > 0xFFFF){

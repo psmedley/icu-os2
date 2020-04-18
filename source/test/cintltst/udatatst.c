@@ -1,6 +1,8 @@
+// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1998-2014, International Business Machines Corporation and
+ * Copyright (c) 1998-2016, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 /*
@@ -168,7 +170,7 @@ static void TestUDataOpen(){
       {
           int i;
           log_verbose("Testing udata_open() on %s\n", icuDataFilePath);
-          for(i=0; i<sizeof(memMap)/sizeof(memMap[0]); i++){
+          for(i=0; i<UPRV_LENGTHOF(memMap); i++){
             /* lots_of_mallocs(); */
             status=U_ZERO_ERROR;
             result=udata_open(path, memMap[i][1], memMap[i][0], &status);
@@ -208,7 +210,7 @@ static void TestUDataOpen(){
 	{
 	  int i;
 	  log_verbose("Testing udata_open() on %s\n", icuDataFilePath);
-	  for(i=0; i<sizeof(memMap)/sizeof(memMap[0]); i++){
+	  for(i=0; i<UPRV_LENGTHOF(memMap); i++){
             /* lots_of_mallocs(); */
             status=U_ZERO_ERROR;
             result=udata_open(path, memMap[i][1], memMap[i][0], &status);
@@ -259,7 +261,7 @@ static void TestUDataOpen(){
         strcat(icuDataFilePath, dirSepString);
         strcat(icuDataFilePath, U_ICUDATA_NAME);
         log_verbose("Testing udata_open() on %s\n", icuDataFilePath);
-        for(i=0; i<sizeof(memMap)/sizeof(memMap[0]); i++){
+        for(i=0; i<UPRV_LENGTHOF(memMap); i++){
             status=U_ZERO_ERROR;
             result=udata_open(icuDataFilePath, memMap[i][1], memMap[i][0], &status);
             if(U_FAILURE(status)) {
@@ -556,6 +558,7 @@ static UBool U_CALLCONV
 isAcceptable1(void *context,
              const char *type, const char *name,
              const UDataInfo *pInfo) {
+    (void)context; // suppress compiler warnings about unused variable
 
     if( pInfo->size>=20 &&
         pInfo->isBigEndian==U_IS_BIG_ENDIAN &&
@@ -588,6 +591,7 @@ static UBool U_CALLCONV
 isAcceptable2(void *context, 
              const char *type, const char *name,
       const UDataInfo *pInfo){
+    (void)context; // suppress compiler warnings about unused variable
     UVersionInfo unicodeVersion;
 
     u_getUnicodeVersion(unicodeVersion);
@@ -616,6 +620,7 @@ static UBool U_CALLCONV
 isAcceptable3(void *context, 
              const char *type, const char *name,
              const UDataInfo *pInfo){
+    (void)context; // suppress compiler warnings about unused variable
 
     if( pInfo->size>=20 &&
         pInfo->isBigEndian==U_IS_BIG_ENDIAN &&
@@ -1231,7 +1236,8 @@ static const struct {
 
     {0x31, 0x31, 0x31, 0x31},     /* dataFormat="1111" */
     {0, 0, 0, 0},                 /* formatVersion */
-    {0, 0, 0, 0}}                 /* dataVersion */
+    {0, 0, 0, 0}},                /* dataVersion */
+    0
 };
 #endif
 
@@ -1393,6 +1399,7 @@ static const struct {
 
 static void U_CALLCONV
 printError(void *context, const char *fmt, va_list args) {
+    (void)context; // suppress compiler warnings about unused variable
     vlog_info("[swap] ", fmt, args);
     log_err("\n");  /* Register error */
 }

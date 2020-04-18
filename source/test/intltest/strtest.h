@@ -1,10 +1,12 @@
+// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2011, International Business Machines Corporation and
+ * Copyright (c) 1997-2015, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 /*   file name:  strtest.h
-*   encoding:   US-ASCII
+*   encoding:   UTF-8
 *   tab size:   8 (not used)
 *   indentation:4
 *
@@ -37,14 +39,22 @@ private:
     void Test_U_STRING();
     void Test_UNICODE_STRING();
     void Test_UNICODE_STRING_SIMPLE();
+    void TestUpperOrdinal();
+    void TestLowerOrdinal();
     void Test_UTF8_COUNT_TRAIL_BYTES();
     void TestStringPiece();
     void TestStringPieceComparisons();
+    void TestStringPieceOther();
+#ifdef U_HAVE_STRING_VIEW
+    void TestStringPieceStringView();
+#endif
     void TestByteSink();
     void TestCheckedArrayByteSink();
     void TestStringByteSink();
     void TestSTLCompatibility();
     void TestCharString();
+    void TestCStr();
+    void Testctou();
 };
 
 #endif

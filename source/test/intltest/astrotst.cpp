@@ -1,6 +1,8 @@
+// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT:
- * Copyright (c) 1996-2014, International Business Machines Corporation and
+ * Copyright (c) 1996-2016, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 
@@ -14,6 +16,7 @@
 
 #include "astro.h"
 #include "astrotst.h"
+#include "cmemory.h"
 #include "gregoimp.h" // for Math
 #include "unicode/simpletz.h"
 
@@ -41,7 +44,12 @@ void AstroTest::runIndexedTest( int32_t index, UBool exec, const char* &name, ch
 
 #undef CASE
 
-#define ASSERT_OK(x)   if(U_FAILURE(x)) { dataerrln("%s:%d: %s\n", __FILE__, __LINE__, u_errorName(x)); return; }
+#define ASSERT_OK(x) UPRV_BLOCK_MACRO_BEGIN { \
+    if(U_FAILURE(x)) { \
+        dataerrln("%s:%d: %s\n", __FILE__, __LINE__, u_errorName(x)); \
+        return; \
+    } \
+} UPRV_BLOCK_MACRO_END
 
 
 void AstroTest::initAstro(UErrorCode &status) {
@@ -85,7 +93,7 @@ void AstroTest::TestSolarLongitude(void) {
   };
 
   logln("");
-  for (uint32_t i = 0; i < sizeof(tests)/sizeof(tests[0]); i++) {
+  for (uint32_t i = 0; i < UPRV_LENGTHOF(tests); i++) {
     gc->clear();
     gc->set(tests[i].d[0], tests[i].d[1]-1, tests[i].d[2], tests[i].d[3], tests[i].d[4]);
 
@@ -113,7 +121,7 @@ void AstroTest::TestLunarPosition(void) {
   };
   logln("");
 
-  for (int32_t i = 0; i < (int32_t)(sizeof(tests)/sizeof(tests[0])); i++) {
+  for (int32_t i = 0; i < UPRV_LENGTHOF(tests); i++) {
     gc->clear();
     gc->set((int32_t)tests[i][0], (int32_t)tests[i][1]-1, (int32_t)tests[i][2], (int32_t)tests[i][3], (int32_t)tests[i][4]);
     astro->setDate(gc->getTime(status));
@@ -171,7 +179,7 @@ void AstroTest::TestCoverage(void) {
     myastro, myastro2, myastro3, myastro2 // check cache
   };
 
-  for (uint32_t i = 0; i < sizeof(astronomers)/sizeof(astronomers[0]); ++i) {
+  for (uint32_t i = 0; i < UPRV_LENGTHOF(astronomers); ++i) {
     CalendarAstronomer *anAstro = astronomers[i];
 
     //logln("astro: " + astro);
@@ -253,7 +261,7 @@ void AstroTest::TestSunriseTimes(void) {
 
   logln("Sunrise/Sunset times for Toronto, Canada");
   // long = 79 25", lat = 43 40"
-  CalendarAstronomer *astro3 = new CalendarAstronomer(-(79+25/60), 43+40/60);
+  CalendarAstronomer astro3(-(79+25/60), 43+40/60);
 
   // As of ICU4J 2.8 the ICU4J time zones implement pass-through
   // to the underlying JDK.  Because of variation in the
@@ -263,46 +271,47 @@ void AstroTest::TestSunriseTimes(void) {
   // [aliu 10/15/03]
 
   // TimeZone tz = TimeZone.getTimeZone("America/Montreal");
-  TimeZone *tz = new SimpleTimeZone(-18000000 + 3600000, "Montreal(FIXED)");
+  SimpleTimeZone tz(-18000000 + 3600000, "Montreal(FIXED)");
 
-  GregorianCalendar *cal = new GregorianCalendar(tz->clone(), Locale::getUS(), status);
-  GregorianCalendar *cal2 = new GregorianCalendar(tz->clone(), Locale::getUS(), status);
-  cal->clear();
-  cal->set(UCAL_YEAR, 2001);
-  cal->set(UCAL_MONTH, UCAL_APRIL);
-  cal->set(UCAL_DAY_OF_MONTH, 1);
-  cal->set(UCAL_HOUR_OF_DAY, 12); // must be near local noon for getSunRiseSet to work
+  GregorianCalendar cal(tz.clone(), Locale::getUS(), status);
+  GregorianCalendar cal2(tz.clone(), Locale::getUS(), status);
+  cal.clear();
+  cal.set(UCAL_YEAR, 2001);
+  cal.set(UCAL_MONTH, UCAL_APRIL);
+  cal.set(UCAL_DAY_OF_MONTH, 1);
+  cal.set(UCAL_HOUR_OF_DAY, 12); // must be near local noon for getSunRiseSet to work
 
-  DateFormat *df_t  = DateFormat::createTimeInstance(DateFormat::MEDIUM,Locale::getUS());
-  DateFormat *df_d  = DateFormat::createDateInstance(DateFormat::MEDIUM,Locale::getUS());
-  DateFormat *df_dt = DateFormat::createDateTimeInstance(DateFormat::MEDIUM, DateFormat::MEDIUM, Locale::getUS());
-  if(!df_t || !df_d || !df_dt) {
-    dataerrln("couldn't create dateformats.");
-    return;
+  LocalPointer<DateFormat> df_t(DateFormat::createTimeInstance(DateFormat::MEDIUM,Locale::getUS()));
+  LocalPointer<DateFormat> df_d(DateFormat::createDateInstance(DateFormat::MEDIUM,Locale::getUS()));
+  LocalPointer<DateFormat> df_dt(DateFormat::createDateTimeInstance(DateFormat::MEDIUM, DateFormat::MEDIUM, Locale::getUS()));
+  if(!df_t.isValid() || !df_d.isValid() || !df_dt.isValid()) {
+      dataerrln("couldn't create dateformats.");
+      closeAstro(status);
+      return;
   }
-  df_t->adoptTimeZone(tz->clone());
-  df_d->adoptTimeZone(tz->clone());
-  df_dt->adoptTimeZone(tz->clone());
+  df_t->adoptTimeZone(tz.clone());
+  df_d->adoptTimeZone(tz.clone());
+  df_dt->adoptTimeZone(tz.clone());
 
   for (int32_t i=0; i < 30; i++) {
     logln("setDate\n");
-    astro3->setDate(cal->getTime(status));
+    astro3.setDate(cal.getTime(status));
     logln("getRiseSet(TRUE)\n");
-    UDate sunrise = astro3->getSunRiseSet(TRUE);
+    UDate sunrise = astro3.getSunRiseSet(TRUE);
     logln("getRiseSet(FALSE)\n");
-    UDate sunset  = astro3->getSunRiseSet(FALSE);
+    UDate sunset  = astro3.getSunRiseSet(FALSE);
     logln("end of getRiseSet\n");
 
-    cal2->setTime(cal->getTime(status), status);
-    cal2->set(UCAL_SECOND,      0);
-    cal2->set(UCAL_MILLISECOND, 0);
+    cal2.setTime(cal.getTime(status), status);
+    cal2.set(UCAL_SECOND,      0);
+    cal2.set(UCAL_MILLISECOND, 0);
 
-    cal2->set(UCAL_HOUR_OF_DAY, USNO[4*i+0]);
-    cal2->set(UCAL_MINUTE,      USNO[4*i+1]);
-    UDate exprise = cal2->getTime(status);
-    cal2->set(UCAL_HOUR_OF_DAY, USNO[4*i+2]);
-    cal2->set(UCAL_MINUTE,      USNO[4*i+3]);
-    UDate expset = cal2->getTime(status);
+    cal2.set(UCAL_HOUR_OF_DAY, USNO[4*i+0]);
+    cal2.set(UCAL_MINUTE,      USNO[4*i+1]);
+    UDate exprise = cal2.getTime(status);
+    cal2.set(UCAL_HOUR_OF_DAY, USNO[4*i+2]);
+    cal2.set(UCAL_MINUTE,      USNO[4*i+3]);
+    UDate expset = cal2.getTime(status);
     // Compute delta of what we got to the USNO data, in seconds
     int32_t deltarise = (int32_t)uprv_fabs((sunrise - exprise) / 1000);
     int32_t deltaset = (int32_t)uprv_fabs((sunset - expset) / 1000);
@@ -315,34 +324,34 @@ void AstroTest::TestSunriseTimes(void) {
     UnicodeString s1, s2, s3, s4, s5;
     if (deltarise > MAX_DEV || deltaset > MAX_DEV) {
       if (deltarise > MAX_DEV) {
-        errln("FAIL: (rise) " + df_d->format(cal->getTime(status),s1) +
+        errln("FAIL: (rise) " + df_d->format(cal.getTime(status),s1) +
               ", Sunrise: " + df_dt->format(sunrise, s2) +
               " (USNO " + df_t->format(exprise,s3) +
               " d=" + deltarise + "s)");
       } else {
-        logln(df_d->format(cal->getTime(status),s1) +
+        logln(df_d->format(cal.getTime(status),s1) +
               ", Sunrise: " + df_dt->format(sunrise,s2) +
               " (USNO " + df_t->format(exprise,s3) + ")");
       }
       s1.remove(); s2.remove(); s3.remove(); s4.remove(); s5.remove();
       if (deltaset > MAX_DEV) {
-        errln("FAIL: (set)  " + df_d->format(cal->getTime(status),s1) +
+        errln("FAIL: (set)  " + df_d->format(cal.getTime(status),s1) +
               ", Sunset:  " + df_dt->format(sunset,s2) +
               " (USNO " + df_t->format(expset,s3) +
               " d=" + deltaset + "s)");
       } else {
-        logln(df_d->format(cal->getTime(status),s1) +
+        logln(df_d->format(cal.getTime(status),s1) +
               ", Sunset: " + df_dt->format(sunset,s2) +
               " (USNO " + df_t->format(expset,s3) + ")");
       }
     } else {
-      logln(df_d->format(cal->getTime(status),s1) +
+      logln(df_d->format(cal.getTime(status),s1) +
             ", Sunrise: " + df_dt->format(sunrise,s2) +
             " (USNO " + df_t->format(exprise,s3) + ")" +
             ", Sunset: " + df_dt->format(sunset,s4) +
             " (USNO " + df_t->format(expset,s5) + ")");
     }
-    cal->add(UCAL_DATE, 1, status);
+    cal.add(UCAL_DATE, 1, status);
   }
 
   //        CalendarAstronomer a = new CalendarAstronomer(-(71+5/60), 42+37/60);
@@ -355,13 +364,6 @@ void AstroTest::TestSunriseTimes(void) {
   //        cal.set(cal.DATE, 27);
   //        a.setDate(cal.getTime());
   //        long r = a.getSunRiseSet2(true);
-  delete astro3;
-  delete tz;
-  delete cal;
-  delete cal2;
-  delete df_t;
-  delete df_d;
-  delete df_dt;
   closeAstro(status);
   ASSERT_OK(status);
 }
@@ -377,38 +379,43 @@ void AstroTest::TestBasics(void) {
   }
 
   // Check that our JD computation is the same as the book's (p. 88)
-  GregorianCalendar *cal3 = new GregorianCalendar(TimeZone::getGMT()->clone(), Locale::getUS(), status);
-  DateFormat *d3 = DateFormat::createDateTimeInstance(DateFormat::MEDIUM,DateFormat::MEDIUM,Locale::getUS());
+  GregorianCalendar cal3(TimeZone::getGMT()->clone(), Locale::getUS(), status);
+  LocalPointer<DateFormat> d3(DateFormat::createDateTimeInstance(DateFormat::MEDIUM,DateFormat::MEDIUM,Locale::getUS()));
+  if (d3.isNull()) {
+      dataerrln("Got error: %s", u_errorName(status));
+      closeAstro(status);
+      return;
+  }
   d3->setTimeZone(*TimeZone::getGMT());
-  cal3->clear();
-  cal3->set(UCAL_YEAR, 1980);
-  cal3->set(UCAL_MONTH, UCAL_JULY);
-  cal3->set(UCAL_DATE, 2);
-  logln("cal3[a]=%.1lf, d=%d\n", cal3->getTime(status), cal3->get(UCAL_JULIAN_DAY,status));
+  cal3.clear();
+  cal3.set(UCAL_YEAR, 1980);
+  cal3.set(UCAL_MONTH, UCAL_JULY);
+  cal3.set(UCAL_DATE, 2);
+  logln("cal3[a]=%.1lf, d=%d\n", cal3.getTime(status), cal3.get(UCAL_JULIAN_DAY,status));
   {
     UnicodeString s;
-    logln(UnicodeString("cal3[a] = ") + d3->format(cal3->getTime(status),s));
+    logln(UnicodeString("cal3[a] = ") + d3->format(cal3.getTime(status),s));
   }
-  cal3->clear();
-  cal3->set(UCAL_YEAR, 1980);
-  cal3->set(UCAL_MONTH, UCAL_JULY);
-  cal3->set(UCAL_DATE, 27);
-  logln("cal3=%.1lf, d=%d\n", cal3->getTime(status), cal3->get(UCAL_JULIAN_DAY,status));
+  cal3.clear();
+  cal3.set(UCAL_YEAR, 1980);
+  cal3.set(UCAL_MONTH, UCAL_JULY);
+  cal3.set(UCAL_DATE, 27);
+  logln("cal3=%.1lf, d=%d\n", cal3.getTime(status), cal3.get(UCAL_JULIAN_DAY,status));
 
   ASSERT_OK(status);
   {
     UnicodeString s;
-    logln(UnicodeString("cal3 = ") + d3->format(cal3->getTime(status),s));
+    logln(UnicodeString("cal3 = ") + d3->format(cal3.getTime(status),s));
   }
-  astro->setTime(cal3->getTime(status));
+  astro->setTime(cal3.getTime(status));
   double jd = astro->getJulianDay() - 2447891.5;
   double exp = -3444.;
   if (jd == exp) {
     UnicodeString s;
-    logln(d3->format(cal3->getTime(status),s) + " => " + jd);
+    logln(d3->format(cal3.getTime(status),s) + " => " + jd);
   } else {
     UnicodeString s;
-    errln("FAIL: " + d3->format(cal3->getTime(status), s) + " => " + jd +
+    errln("FAIL: " + d3->format(cal3.getTime(status), s) + " => " + jd +
           ", expected " + exp);
   }
 
@@ -420,8 +427,6 @@ void AstroTest::TestBasics(void) {
   //        astro.setDate(cal3.getTime());
   //        astro.foo();
 
-  delete cal3;
-  delete d3;
   ASSERT_OK(status);
   closeAstro(status);
   ASSERT_OK(status);
@@ -450,7 +455,7 @@ void AstroTest::TestMoonAge(void){
 	static const double angle[] = {356.8493418421329, 356.8386760059673, 0.09625415252237701, 355.9986960782416, 3.5714026601303317, 124.26906744384183, 59.80247650195558,
 									357.54163205513123, 268.41779281511094, 4.82340276581624};
 	static const double precision = CalendarAstronomer::PI/32;
-	for (int32_t i = 0; i < (int32_t)(sizeof(testcase)/sizeof(testcase[0])); i++) {
+	for (int32_t i = 0; i < UPRV_LENGTHOF(testcase); i++) {
 		gc->clear();
 		logln((UnicodeString)"CASE["+i+"]: Year "+(int32_t)testcase[i][0]+" Month "+(int32_t)testcase[i][1]+" Day "+
 		                                    (int32_t)testcase[i][2]+" Hour "+(int32_t)testcase[i][3]+" Minutes "+(int32_t)testcase[i][4]+

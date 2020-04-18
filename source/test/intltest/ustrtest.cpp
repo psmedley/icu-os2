@@ -1,8 +1,12 @@
+// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2015, International Business Machines Corporation and
+ * Copyright (c) 1997-2016, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
+
+#include <utility>
 
 #include "ustrtest.h"
 #include "unicode/appendable.h"
@@ -11,6 +15,7 @@
 #include "unicode/uchar.h"
 #include "unicode/ustring.h"
 #include "unicode/locid.h"
+#include "unicode/strenum.h"
 #include "unicode/ucnv.h"
 #include "unicode/uenum.h"
 #include "unicode/utf16.h"
@@ -27,11 +32,13 @@ using namespace std;
 
 UnicodeStringTest::~UnicodeStringTest() {}
 
+extern IntlTest *createStringCaseTest();
+
 void UnicodeStringTest::runIndexedTest( int32_t index, UBool exec, const char* &name, char *par)
 {
     if (exec) logln("TestSuite UnicodeStringTest: ");
     TESTCASE_AUTO_BEGIN;
-    TESTCASE_AUTO_CLASS(StringCaseTest);
+    TESTCASE_AUTO_CREATE_CLASS(StringCaseTest);
     TESTCASE_AUTO(TestBasicManipulation);
     TESTCASE_AUTO(TestCompare);
     TESTCASE_AUTO(TestExtract);
@@ -56,6 +63,10 @@ void UnicodeStringTest::runIndexedTest( int32_t index, UBool exec, const char* &
     TESTCASE_AUTO(TestSizeofUnicodeString);
     TESTCASE_AUTO(TestStartsWithAndEndsWithNulTerminated);
     TESTCASE_AUTO(TestMoveSwap);
+    TESTCASE_AUTO(TestUInt16Pointers);
+    TESTCASE_AUTO(TestWCharPointers);
+    TESTCASE_AUTO(TestNullPointers);
+    TESTCASE_AUTO(TestUnicodeStringInsertAppendToSelf);
     TESTCASE_AUTO_END;
 }
 
@@ -66,7 +77,7 @@ UnicodeStringTest::TestBasicManipulation()
     UnicodeString   expectedValue;
     UnicodeString   *c;
 
-    c=(UnicodeString *)test1.clone();
+    c=test1.clone();
     test1.insert(24, "good ");
     expectedValue = "Now is the time for all good men to come swiftly to the aid of the party.\n";
     if (test1 != expectedValue)
@@ -355,11 +366,11 @@ UnicodeStringTest::TestCompare()
         UnicodeString u[20]; // must be at least as long as strings[]
         int32_t i;
 
-        for(i=0; i<(int32_t)(sizeof(strings)/sizeof(strings[0])); ++i) {
+        for(i=0; i<UPRV_LENGTHOF(strings); ++i) {
             u[i]=UnicodeString(TRUE, strings[i], -1);
         }
 
-        for(i=0; i<(int32_t)(sizeof(strings)/sizeof(strings[0])-1); ++i) {
+        for(i=0; i<UPRV_LENGTHOF(strings)-1; ++i) {
             if(u[i].compareCodePointOrder(u[i+1])>=0 || u[i].compareCodePointOrder(0, INT32_MAX, u[i+1].getBuffer())>=0) {
                 errln("error: UnicodeString::compareCodePointOrder() fails for string %d and the following one\n", i);
             }
@@ -1115,27 +1126,25 @@ UnicodeStringTest::TestMiscellaneous()
         errln("UnicodeString(u[-1]).getTerminatedBuffer() returns a bad buffer");
     }
 
-    test1=UNICODE_STRING("la", 2);
-    test1.append(UNICODE_STRING(" lila", 5).getTerminatedBuffer(), 0, -1);
-    if(test1!=UNICODE_STRING("la lila", 7)) {
-        errln("UnicodeString::append(const UChar *, start, length) failed");
-    }
+    // NOTE: Some compilers will optimize u"la" to point to the same static memory
+    // as u" lila", offset by 3 code units
+    test1=UnicodeString(TRUE, u"la", 2);
+    test1.append(UnicodeString(TRUE, u" lila", 5).getTerminatedBuffer(), 0, -1);
+    assertEquals("UnicodeString::append(const UChar *, start, length) failed",
+        u"la lila", test1);
 
-    test1.insert(3, UNICODE_STRING("dudum ", 6), 0, INT32_MAX);
-    if(test1!=UNICODE_STRING("la dudum lila", 13)) {
-        errln("UnicodeString::insert(start, const UniStr &, start, length) failed");
-    }
+    test1.insert(3, UnicodeString(TRUE, u"dudum ", 6), 0, INT32_MAX);
+    assertEquals("UnicodeString::insert(start, const UniStr &, start, length) failed",
+        u"la dudum lila", test1);
 
     static const UChar ucs[]={ 0x68, 0x6d, 0x20, 0 };
     test1.insert(9, ucs, -1);
-    if(test1!=UNICODE_STRING("la dudum hm lila", 16)) {
-        errln("UnicodeString::insert(start, const UChar *, length) failed");
-    }
+    assertEquals("UnicodeString::insert(start, const UChar *, length) failed",
+        u"la dudum hm lila", test1);
 
     test1.replace(9, 2, (UChar)0x2b);
-    if(test1!=UNICODE_STRING("la dudum + lila", 15)) {
-        errln("UnicodeString::replace(start, length, UChar) failed");
-    }
+    assertEquals("UnicodeString::replace(start, length, UChar) failed",
+        u"la dudum + lila", test1);
 
     if(test1.hasMetaData() || UnicodeString().hasMetaData()) {
         errln("UnicodeString::hasMetaData() returns TRUE");
@@ -1245,7 +1254,7 @@ UnicodeStringTest::TestStackAllocation()
         errln("UnicodeString.setTo(readonly alias) does not alias correctly");
     }
 
-    UnicodeString *c=(UnicodeString *)test->clone();
+    UnicodeString *c=test->clone();
 
     workingBuffer[1] = 0x109;
     if(test->charAt(1) != 0x109) {
@@ -1549,7 +1558,10 @@ UnicodeStringTest::TestBogus() {
 
     // writable alias to another string's buffer: very bad idea, just convenient for this test
     test3.setToBogus();
-    if(!test3.isBogus() || test3.setTo((UChar *)test1.getBuffer(), test1.length(), test1.getCapacity()).isBogus() || test3!=test1) {
+    if(!test3.isBogus() ||
+            test3.setTo(const_cast<UChar *>(test1.getBuffer()),
+                        test1.length(), test1.getCapacity()).isBogus() ||
+            test3!=test1) {
         errln("bogus.setTo(writable alias) failed");
     }
 
@@ -1604,8 +1616,8 @@ UnicodeStringTest::TestBogus() {
     // test that NULL primitive input string values are treated like
     // empty strings, not errors (bogus)
     test2.setTo((UChar32)0x10005);
-    if(test2.insert(1, NULL, 1).length()!=2) {
-        errln("UniStr.insert(...NULL...) should not modify the string but does");
+    if(test2.insert(1, nullptr, 1).length()!=2) {
+        errln("UniStr.insert(...nullptr...) should not modify the string but does");
     }
 
     UErrorCode errorCode=U_ZERO_ERROR;
@@ -1870,9 +1882,9 @@ UnicodeStringTest::TestUTF8() {
         0xf3, 0xa0, 0x80, 0x80, 0xf4, 0x8f, 0xbf, 0xbf
     };
     static const UChar expected_utf16[] = {
-        0x41, 0xfffd,
-        0x61, 0xfffd,
-        0xfffd, 0x5a,
+        0x41, 0xfffd, 0xfffd, 0xfffd,
+        0x61, 0xfffd, 0xfffd, 0xfffd,
+        0xfffd,  0xfffd, 0xfffd, 0xfffd,0x5a,
         0xd900, 0xdc00, 0x7a,
         0xd800, 0xdc00, 0xd840, 0xdc00,
         0xdb40, 0xdc00, 0xdbff, 0xdfff
@@ -1883,13 +1895,11 @@ UnicodeStringTest::TestUTF8() {
     if(from8 != expected) {
         errln("UnicodeString::fromUTF8(StringPiece) did not create the expected string.");
     }
-#if U_HAVE_STD_STRING
     std::string utf8_string((const char *)utf8, sizeof(utf8));
     UnicodeString from8b = UnicodeString::fromUTF8(utf8_string);
     if(from8b != expected) {
         errln("UnicodeString::fromUTF8(std::string) did not create the expected string.");
     }
-#endif
 
     static const UChar utf16[] = {
         0x41, 0xd900, 0x61, 0xdc00, 0x5a, 0xd900, 0xdc00, 0x7a, 0xd800, 0xdc00, 0xdbff, 0xdfff
@@ -1911,7 +1921,6 @@ UnicodeStringTest::TestUTF8() {
     if(!sink.calledFlush) {
         errln("UnicodeString::toUTF8(sink) did not sink.Flush().");
     }
-#if U_HAVE_STD_STRING
     // Initial contents for testing that toUTF8String() appends.
     std::string result8 = "-->";
     std::string expected8 = "-->" + std::string((const char *)expected_utf8, sizeof(expected_utf8));
@@ -1920,7 +1929,6 @@ UnicodeStringTest::TestUTF8() {
     if(result8r != expected8 || &result8r != &result8) {
         errln("UnicodeString::toUTF8String() did not create the expected string.");
     }
-#endif
 }
 
 // Test if this compiler supports Return Value Optimization of unnamed temporary objects.
@@ -2123,6 +2131,11 @@ UnicodeStringTest::TestSizeofUnicodeString() {
     }
 }
 
+// Try to avoid clang -Wself-move warnings from s1 = std::move(s1);
+void moveFrom(UnicodeString &dest, UnicodeString &src) {
+    dest = std::move(src);
+}
+
 void
 UnicodeStringTest::TestMoveSwap() {
     static const UChar abc[3] = { 0x61, 0x62, 0x63 };  // "abc"
@@ -2139,21 +2152,20 @@ UnicodeStringTest::TestMoveSwap() {
         errln("swap(UnicodeString) did not swap back");
     }
     UnicodeString s4;
-    s4.moveFrom(s1);
+    s4 = std::move(s1);
     if(s4.getBuffer() != p || s4.length() != 100 || !s1.isBogus()) {
-        errln("UnicodeString.moveFrom(heap) did not move");
+        errln("UnicodeString = std::move(heap) did not move");
     }
     UnicodeString s5;
-    s5.moveFrom(s2);
+    s5 = std::move(s2);
     if(s5 != UNICODE_STRING_SIMPLE("defg")) {
-        errln("UnicodeString.moveFrom(stack) did not move");
+        errln("UnicodeString = std::move(stack) did not move");
     }
     UnicodeString s6;
-    s6.moveFrom(s3);
+    s6 = std::move(s3);
     if(s6.getBuffer() != abc || s6.length() != 3) {
-        errln("UnicodeString.moveFrom(alias) did not move");
+        errln("UnicodeString = std::move(alias) did not move");
     }
-#if U_HAVE_RVALUE_REFERENCES
     infoln("TestMoveSwap() with rvalue references");
     s1 = static_cast<UnicodeString &&>(s6);
     if(s1.getBuffer() != abc || s1.length() != 3) {
@@ -2163,25 +2175,138 @@ UnicodeStringTest::TestMoveSwap() {
     if(s7.getBuffer() != p || s7.length() != 100 || !s4.isBogus()) {
         errln("UnicodeString move constructor did not move");
     }
-#else
-    infoln("TestMoveSwap() without rvalue references");
-    UnicodeString s7;
-#endif
 
     // Move self assignment leaves the object valid but in an undefined state.
     // Do it to make sure there is no crash,
     // but do not check for any particular resulting value.
-    s1.moveFrom(s1);
-    s2.moveFrom(s2);
-    s3.moveFrom(s3);
-    s4.moveFrom(s4);
-    s5.moveFrom(s5);
-    s6.moveFrom(s6);
-    s7.moveFrom(s7);
+    moveFrom(s1, s1);
+    moveFrom(s2, s2);
+    moveFrom(s3, s3);
+    moveFrom(s4, s4);
+    moveFrom(s5, s5);
+    moveFrom(s6, s6);
+    moveFrom(s7, s7);
     // Simple copy assignment must work.
     UnicodeString simple = UNICODE_STRING_SIMPLE("simple");
     s1 = s6 = s4 = s7 = simple;
     if(s1 != simple || s4 != simple || s6 != simple || s7 != simple) {
         errln("UnicodeString copy after self-move did not work");
     }
+}
+
+void
+UnicodeStringTest::TestUInt16Pointers() {
+    static const uint16_t carr[] = { 0x61, 0x62, 0x63, 0 };
+    uint16_t arr[4];
+
+    UnicodeString expected(u"abc");
+    assertEquals("abc from pointer", expected, UnicodeString(carr));
+    assertEquals("abc from pointer+length", expected, UnicodeString(carr, 3));
+    assertEquals("abc from read-only-alias pointer", expected, UnicodeString(TRUE, carr, 3));
+
+    UnicodeString alias(arr, 0, 4);
+    alias.append(u'a').append(u'b').append(u'c');
+    assertEquals("abc from writable alias", expected, alias);
+    assertEquals("buffer=abc from writable alias", expected, UnicodeString(arr, 3));
+
+    UErrorCode errorCode = U_ZERO_ERROR;
+    int32_t length = UnicodeString(u"def").extract(arr, 4, errorCode);
+    assertSuccess(WHERE, errorCode);
+    assertEquals("def from extract()", UnicodeString(u"def"), UnicodeString(arr, length));
+}
+
+void
+UnicodeStringTest::TestWCharPointers() {
+#if U_SIZEOF_WCHAR_T==2
+    static const wchar_t carr[] = { 0x61, 0x62, 0x63, 0 };
+    wchar_t arr[4];
+
+    UnicodeString expected(u"abc");
+    assertEquals("abc from pointer", expected, UnicodeString(carr));
+    assertEquals("abc from pointer+length", expected, UnicodeString(carr, 3));
+    assertEquals("abc from read-only-alias pointer", expected, UnicodeString(TRUE, carr, 3));
+
+    UnicodeString alias(arr, 0, 4);
+    alias.append(u'a').append(u'b').append(u'c');
+    assertEquals("abc from writable alias", expected, alias);
+    assertEquals("buffer=abc from writable alias", expected, UnicodeString(arr, 3));
+
+    UErrorCode errorCode = U_ZERO_ERROR;
+    int32_t length = UnicodeString(u"def").extract(arr, 4, errorCode);
+    assertSuccess(WHERE, errorCode);
+    assertEquals("def from extract()", UnicodeString(u"def"), UnicodeString(arr, length));
+#endif
+}
+
+void
+UnicodeStringTest::TestNullPointers() {
+    assertTrue("empty from nullptr", UnicodeString(nullptr).isEmpty());
+    assertTrue("empty from nullptr+length", UnicodeString(nullptr, 2).isEmpty());
+    assertTrue("empty from read-only-alias nullptr", UnicodeString(TRUE, nullptr, 3).isEmpty());
+
+    UnicodeString alias(nullptr, 4, 4);  // empty, no alias
+    assertTrue("empty from writable alias", alias.isEmpty());
+    alias.append(u'a').append(u'b').append(u'c');
+    UnicodeString expected(u"abc");
+    assertEquals("abc from writable alias", expected, alias);
+
+    UErrorCode errorCode = U_ZERO_ERROR;
+    UnicodeString(u"def").extract(nullptr, 0, errorCode);
+    assertEquals("buffer overflow extracting to nullptr", U_BUFFER_OVERFLOW_ERROR, errorCode);
+}
+
+void UnicodeStringTest::TestUnicodeStringInsertAppendToSelf() {
+    IcuTestErrorCode status(*this, "TestUnicodeStringAppendToSelf");
+
+    // Test append operation
+    UnicodeString str(u"foo ");
+    str.append(str);
+    str.append(str);
+    str.append(str);
+    assertEquals("", u"foo foo foo foo foo foo foo foo ", str);
+
+    // Test append operation with readonly alias to start
+    str = UnicodeString(TRUE, u"foo ", 4);
+    str.append(str);
+    str.append(str);
+    str.append(str);
+    assertEquals("", u"foo foo foo foo foo foo foo foo ", str);
+
+    // Test append operation with aliased substring
+    str = u"abcde";
+    UnicodeString sub = str.tempSubString(1, 2);
+    str.append(sub);
+    assertEquals("", u"abcdebc", str);
+
+    // Test append operation with double-aliased substring
+    str = UnicodeString(TRUE, u"abcde", 5);
+    sub = str.tempSubString(1, 2);
+    str.append(sub);
+    assertEquals("", u"abcdebc", str);
+
+    // Test insert operation
+    str = u"a-*b";
+    str.insert(2, str);
+    str.insert(4, str);
+    str.insert(8, str);
+    assertEquals("", u"a-a-a-a-a-a-a-a-*b*b*b*b*b*b*b*b", str);
+
+    // Test insert operation with readonly alias to start
+    str = UnicodeString(TRUE, u"a-*b", 4);
+    str.insert(2, str);
+    str.insert(4, str);
+    str.insert(8, str);
+    assertEquals("", u"a-a-a-a-a-a-a-a-*b*b*b*b*b*b*b*b", str);
+
+    // Test insert operation with aliased substring
+    str = u"abcde";
+    sub = str.tempSubString(1, 3);
+    str.insert(2, sub);
+    assertEquals("", u"abbcdcde", str);
+
+    // Test insert operation with double-aliased substring
+    str = UnicodeString(TRUE, u"abcde", 5);
+    sub = str.tempSubString(1, 3);
+    str.insert(2, sub);
+    assertEquals("", u"abbcdcde", str);
 }
