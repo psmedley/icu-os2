@@ -1967,8 +1967,34 @@ remapPlatformDependentCodepage(const char *locale, const char *name) {
         ULONG len;
         APIRET arc = DosQueryCp(sizeof(cp) * sizeof(cp[0]), cp, &len);
         if (!arc && len >= 4) {
-            sprintf(codepage, "IBM-%lu", cp[0]);
-            name = codepage;
+            switch (cp[0])
+            {
+            case 932:
+            case 942:
+            case 943:
+                /*
+                IBM-932, IBM-942 and IBM-943 are ambiguous aliases. Use
+                similar Shift-JIS.
+                */
+                name = "Shift-JIS";
+                break;
+            case 949:
+                /* IBM-949 is ambiguous alias. Use similar EUC-KR. */
+                name = "EUC-KR";
+                break;
+            case 950:
+                /* IBM-950 is ambiguous alias. Use similar Big5. */
+                name = "Big5";
+                break;
+            case 1381:
+                /* IBM-1381 is ambiguous alias. Use similar EUC-CN. */
+                name = "EUC-CN";
+                break;
+            default:
+                sprintf(codepage, "IBM-%lu", cp[0]);
+                name = codepage;
+                break;
+            }
         }
     }
 #elif U_PLATFORM == U_PF_BSD
