@@ -156,7 +156,7 @@ PATH_SEP = \;
 # BEGINLIBPATH doesn't understand paths starting with ../, hack-fix it #M#
 # (see http://trac.netlabs.org/ports/ticket/83) #M#
 ifneq ($(top_builddir),)#M#
-top_builddir := $(shell pwd)/$(top_builddir)#M#
+top_builddir := $(abspath $(top_builddir))#M#
 endif#M#
 
 # The type of assembly to write for generating an object file
