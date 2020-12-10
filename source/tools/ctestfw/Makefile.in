@@ -98,6 +98,7 @@ ifneq ($(FINAL_SO_TARGET),$(MIDDLE_SO_TARGET))
 endif
 endif
 endif
+endif
 ifneq ($(IMPORT_LIB_EXT),)
 	$(INSTALL-L) $(FINAL_IMPORT_LIB) $(DESTDIR)$(libdir)
 ifeq ($(DISABLE_VERSIONED_LIBS),)
@@ -149,4 +150,3 @@ ifneq ($(patsubst %clean,,$(MAKECMDGOALS)),)
 -include $(DEPS)
 endif
 endif
-
