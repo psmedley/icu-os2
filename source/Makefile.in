@@ -19,7 +19,8 @@ include $(top_builddir)/icudefs.mk
 docdir = $(datadir)/doc
 docsubdir = $(PACKAGE)$(ICULIBDASHSUFFIX)/html
 docfilesdir = doc/html
-docfiles = $(docfilesdir)/*.png $(docfilesdir)/*.html $(docfilesdir)/*.css $(docfilesdir)/*.tag 
+docfiles = $(docfilesdir)/*.html $(docfilesdir)/*.css $(docfilesdir)/*.tag 
+docfilesp = $(docfilesdir)/*.png
 docsrchdir = $(docfilesdir)/search
 docsrchfiles = $(docsrchdir)/*
 
@@ -210,6 +211,7 @@ install-doc: doc
 	$(RM) -r $(DESTDIR)$(docdir)/$(docsubdir)
 	$(MKINSTALLDIRS) $(DESTDIR)$(docdir)/$(docsubdir)
 	$(INSTALL_DATA) $(docfiles) $(DESTDIR)$(docdir)/$(docsubdir)
+	$(INSTALL_DATA) $(docfilesp) $(DESTDIR)$(docdir)/$(docsubdir)
 
 endif
 
